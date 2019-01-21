@@ -5,5 +5,5 @@
 
 
 class BaseExecutor:
-    def execute(self, command):
+    def execute(self, command, timeout=None):
         raise NotImplementedError()
