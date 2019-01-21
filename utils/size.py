@@ -32,6 +32,9 @@ class Size:
     def __str__(self):
         return f"{self.get_value(self.unit)} {self.unit.name}"
 
+    def __int__(self):
+        return int(self.get_value())
+
     def __add__(self, other):
         return Size(self.get_value() + other.get_value())
 
