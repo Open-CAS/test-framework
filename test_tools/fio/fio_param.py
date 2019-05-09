@@ -3,15 +3,32 @@
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 #
 
-import test_utils.linux_command
-import connection.base_executor
 import datetime
-import secrets
 import json
-from types import SimpleNamespace as Namespace
-from test_tools.fio.fio_result import FioResult
-from test_utils.size import Size
+import secrets
 from enum import Enum
+from types import SimpleNamespace as Namespace
+
+from connection.base_executor import BaseExecutor
+from storage_devices.device import Device
+from test_package.test_properties import TestProperties
+from test_tools.fio.fio_result import FioResult
+from test_utils.linux_command import LinuxCommand
+from test_utils.size import Size
+
+
+class CpusAllowedPolicy(Enum):
+    shared = 0,
+    split = 1
+
+
+class ErrorFilter(Enum):
+    none = 0,
+    read = 1,
+    write = 2,
+    io = 3,
+    verify = 4,
+    all = 5
 
 
 class IoEngine(Enum):
@@ -34,6 +51,15 @@ class IoEngine(Enum):
     rbd = 7
 
 
+class ReadWrite(Enum):
+    randread = 0,
+    randrw = 1,
+    randwrite = 2,
+    read = 3,
+    readwrite = 4,
+    write = 5
+
+
 class VerifyMethod(Enum):
     # Use an md5 sum of the data area and store it in the header of each block.
     md5 = 0,
@@ -47,18 +73,9 @@ class VerifyMethod(Enum):
     pattern = 3
 
 
-class ReadWrite(Enum):
-    randread = 0,
-    randrw = 1,
-    randwrite = 2,
-    read = 3,
-    readwrite = 4,
-    write = 5
-
-
-class FioParam(test_utils.linux_command.LinuxCommand):
-    def __init__(self, fio, command_executor: connection.base_executor.BaseExecutor, command_name):
-        test_utils.linux_command.LinuxCommand.__init__(self, command_executor, command_name)
+class FioParam(LinuxCommand):
+    def __init__(self, fio, command_executor: BaseExecutor, command_name):
+        LinuxCommand.__init__(self, command_executor, command_name)
         self.verification_pattern = ''
         self.fio = fio
 
@@ -67,11 +84,23 @@ class FioParam(test_utils.linux_command.LinuxCommand):
             self.verification_pattern = f'0x{secrets.token_hex(32)}'
         return self.verification_pattern
 
+    def allow_mounted_write(self, value: bool):
+        return self.set_param('allow_mounted_write', int(value))
+
     def block_size(self, size: Size):
         return self.set_param('blocksize', int(size))
 
     def bs_split(self, value):
         return self.set_param('bssplit', value)
+
+    def continue_on_error(self, value: ErrorFilter):
+        return self.set_param('continue_on_error', value.name)
+
+    def cpus_allowed(self, value):
+        return self.set_param('cpus_allowed', value)
+
+    def cpus_allowed_policy(self, value: CpusAllowedPolicy):
+        return self.set_param('cpus_allowed_policy', value.name)
 
     def direct(self, value: bool):
         if 'buffered' in self.command_param_dict:
@@ -83,6 +112,13 @@ class FioParam(test_utils.linux_command.LinuxCommand):
 
     def do_verify(self, value: bool):
         return self.set_param('do_verify', int(value))
+
+    def exit_all_on_error(self, value: bool = True):
+        return self.set_param('exitall_on_error') if value \
+            else self.remove_param('exitall_on_error')
+
+    def file_name(self, path):
+        return self.set_param('filename', path)
 
     def file_size(self, size: Size):
         return self.set_param('filesize', int(size))
@@ -102,19 +138,22 @@ class FioParam(test_utils.linux_command.LinuxCommand):
         if value != 1:
             if 'ioengine' in self.command_param_dict and \
                     self.command_param_dict['ioengine'] == 'sync':
-                # TODO: API warning log
-                print("Setting iodepth will have no effect with 'ioengine=sync' setting")
+                TestProperties.LOGGER.warning("Setting iodepth will have no effect with "
+                                              "'ioengine=sync' setting")
         return self.set_param('iodepth', value)
 
     def io_engine(self, value: IoEngine):
         if value == IoEngine.sync:
             if 'iodepth' in self.command_param_dict and self.command_param_dict['iodepth'] != 1:
-                # TODO: API warning log
-                print("Setting 'ioengine=sync' will cause iodepth setting to be ignored")
+                TestProperties.LOGGER.warning("Setting 'ioengine=sync' will cause iodepth setting "
+                                              "to be ignored")
         return self.set_param('ioengine', value.name)
 
     def io_size(self, value: Size):
         return self.set_param('io_size', int(value.get_value()))
+
+    def loops(self, value: int):
+        return self.set_param('loops', value)
 
     def no_random_map(self, value: bool):
         if 'verify' in self.command_param_dict:
@@ -124,7 +163,7 @@ class FioParam(test_utils.linux_command.LinuxCommand):
         else:
             return self.remove_param('norandommap')
 
-    def nrfiles(self, value: int):
+    def nr_files(self, value: int):
         return self.set_param('nrfiles', value)
 
     def num_jobs(self, value: int):
@@ -132,6 +171,11 @@ class FioParam(test_utils.linux_command.LinuxCommand):
 
     def offset(self, value: Size):
         return self.set_param('offset', int(value.get_value()))
+
+    def percentage_random(self, value: int):
+        if value <= 100:
+            return self.set_param('percentage_random', value)
+        raise ValueError("Argument out of range. Should be 0-100.")
 
     def pool(self, value):
         return self.set_param('pool', value)
@@ -154,29 +198,38 @@ class FioParam(test_utils.linux_command.LinuxCommand):
     def run_time(self, value: datetime.timedelta):
         if value.total_seconds() == 0:
             raise ValueError("Runtime parameter must not be set to 0.")
-        return self.set_param('runtime', int(value.total_seconds())).set_param('time_based')
+        return self.set_param('runtime', int(value.total_seconds()))
 
     def size(self, value: Size):
         return self.set_param('size', int(value.get_value()))
 
+    def stonewall(self, value: bool = True):
+        return self.set_param('stonewall') if value else self.remove_param('stonewall')
+
     def sync(self, value: bool = True):
         return self.set_param('sync', int(value))
 
+    def time_based(self, value: bool = True):
+        return self.set_param('time_based') if value else self.remove_param('time_based')
+
     def thread(self, value: bool = True):
-        if value:
-            return self.set_param('thread')
-        else:
-            return self.remove_param('thread')
+        return self.set_param('thread') if value else self.remove_param('thread')
 
     def verification_with_pattern(self, pattern=None):
         if pattern is not None and pattern != '':
             self.verification_pattern = pattern
-        return self.set_param('verify', 'pattern')\
-            .set_param('verify_pattern', self.get_verification_pattern())\
-            .set_param('do_verify', 1)
+        return self.verify(VerifyMethod.pattern) \
+            .set_param('verify_pattern', self.get_verification_pattern()) \
+            .do_verify()
 
     def verify(self, value: VerifyMethod):
         return self.set_param('verify', value.name)
+
+    def verify_backlog(self, value: int):
+        return self.set_param('verify_backlog', value)
+
+    def verify_dump(self, value: bool = True):
+        return self.set_param('verify_dump', int(value))
 
     def verify_fatal(self, value: bool = True):
         return self.set_param('verify_fatal', int(value))
@@ -186,8 +239,10 @@ class FioParam(test_utils.linux_command.LinuxCommand):
             return self.set_param('rwmixwrite', value)
         raise ValueError("Argument out of range. Should be 0-100.")
 
-    def target(self, path):
-        return self.set_param('filename', path)
+    def target(self, target):
+        if target is Device:
+            return self.file_name(target.system_path)
+        return self.file_name(target)
 
     def add_job(self, job_name=None):
         if not job_name:
@@ -220,14 +275,12 @@ class FioParam(test_utils.linux_command.LinuxCommand):
 
 
 class FioParamCmd(FioParam):
-    def __init__(self, fio, command_executor: connection.base_executor.BaseExecutor,
-                 command_name='fio'):
+    def __init__(self, fio, command_executor: BaseExecutor, command_name='fio'):
         FioParam.__init__(self, fio, command_executor, command_name)
         self.param_name_prefix = "--"
 
 
 class FioParamConfig(FioParam):
-    def __init__(self, fio, command_executor: connection.base_executor.BaseExecutor,
-                 command_name='[global]'):
+    def __init__(self, fio, command_executor: BaseExecutor, command_name='[global]'):
         FioParam.__init__(self, fio, command_executor, command_name)
         self.param_name_prefix = "\n"
