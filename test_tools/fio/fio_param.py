@@ -9,7 +9,7 @@ import datetime
 import secrets
 import json
 from types import SimpleNamespace as Namespace
-from tools.fio.fio_result import FioResult
+from test_tools.fio.fio_result import FioResult
 from utils.size import Size
 from enum import Enum
 

@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 #
 
-import tools.fio.fio_param
+import test_tools.fio.fio_param
 import datetime
 
 
@@ -13,12 +13,12 @@ class Fio:
         self.default_run_time = datetime.timedelta(hours=1)
         self.jobs = []
         self.executor = executor_obj
-        self.base_cmd_parameters: tools.fio.fio_param.FioParam = None
-        self.global_cmd_parameters: tools.fio.fio_param.FioParam = None
+        self.base_cmd_parameters: test_tools.fio.fio_param.FioParam = None
+        self.global_cmd_parameters: test_tools.fio.fio_param.FioParam = None
 
     def create_command(self):
-        self.base_cmd_parameters = tools.fio.fio_param.FioParamCmd(self, self.executor)
-        self.global_cmd_parameters = tools.fio.fio_param.FioParamConfig(self, self.executor)
+        self.base_cmd_parameters = test_tools.fio.fio_param.FioParamCmd(self, self.executor)
+        self.global_cmd_parameters = test_tools.fio.fio_param.FioParamConfig(self, self.executor)
         self.fio_file = f'fio_run_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%s")}'
         self.base_cmd_parameters\
             .set_param('eta', 'always')\
@@ -66,7 +66,7 @@ class Fio:
             command = f"echo '{self.execution_cmd_parameters()}' |" \
                 f" {str(self.base_cmd_parameters)} -"
         else:
-            fio_parameters = tools.fio.fio_param.FioParamCmd(self, self.executor)
+            fio_parameters = test_tools.fio.fio_param.FioParamCmd(self, self.executor)
             fio_parameters.command_param_dict.update(self.base_cmd_parameters.command_param_dict)
             fio_parameters.command_param_dict.update(self.global_cmd_parameters.command_param_dict)
             fio_parameters.set_param('name', 'fio')
