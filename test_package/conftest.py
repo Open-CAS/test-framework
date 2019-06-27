@@ -9,6 +9,7 @@ import os
 import sys
 import importlib
 from IPy import IP
+from test_utils import disk_finder
 sys.path.append(os.path.join(os.path.dirname(__file__), os.path.pardir))
 
 # User should provide config/configuration.py with path to own test_wrapper,
@@ -17,7 +18,7 @@ import config.configuration as c
 from connection.ssh_executor import SshExecutor
 from connection.local_executor import LocalExecutor
 from test_package.test_properties import TestProperties
-from utils.dut import Dut
+from test_utils.dut import Dut
 if os.path.exists(c.test_wrapper_dir):
     sys.path.append(os.path.abspath(c.test_wrapper_dir))
     import test_wrapper
@@ -60,12 +61,23 @@ def prepare_and_cleanup(request):
         if hasattr(dut_config, 'ip'):
             try:
                 IP(dut_config.ip)
-                yield {'ip': dut_config.ip, 'disks': dut_config.disks}, \
-                    SshExecutor(dut_config.ip, dut_config.user, dut_config.password)
+                if hasattr(dut_config, 'user') and hasattr(dut_config, 'password'):
+                    executor = SshExecutor(dut_config.ip, dut_config.user, dut_config.password)
+                    TestProperties.executor = executor
+                else:
+                    raise Exception("There is no credentials in config file.")
+                if hasattr(dut_config, 'disks'):
+                    yield {'ip': dut_config.ip, 'disks': dut_config.disks}
+                else:
+                    yield {'ip': dut_config.ip, 'disks': disk_finder.find_disks()}
             except ValueError:
                 raise Exception("IP address from configuration file is in invalid format.")
+        elif hasattr(dut_config, 'disks'):
+            TestProperties.executor = LocalExecutor()
+            yield {'disks': dut_config.disks}
         else:
-            yield {'disks': dut_config.disks}, LocalExecutor()
+            TestProperties.executor = LocalExecutor()
+            yield {'disks': disk_finder.find_disks()}
     else:
         raise Exception(
             "There is neither configuration file nor test wrapper attached to tests execution.")
@@ -95,8 +107,7 @@ def get_force_param():
 def base_prepare(prepare_fixture):
     LOGGER.info("Base test prepare")
     LOGGER.info("Initializing executor and dut information")
-    dut_info, executor = prepare_fixture
-    TestProperties.executor = executor
+    dut_info = prepare_fixture
     TestProperties.dut = Dut(dut_info)
     LOGGER.info(f"DUT info: {TestProperties.dut}")
     if get_force_param() is not "False" and not hasattr(c, "already_updated"):

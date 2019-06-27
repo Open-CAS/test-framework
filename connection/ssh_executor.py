@@ -4,15 +4,17 @@
 #
 
 import paramiko
-from utils.output import Output
+from test_utils.output import Output
 from connection.base_executor import BaseExecutor
 from datetime import timedelta
+import re
 
 
 class SshExecutor(BaseExecutor):
     def __init__(self, ip, username, password, port=22):
+        self.ip = ip
         self.ssh = paramiko.SSHClient()
-        self.connect(ip, username, password, port)
+        self.connect(username, password, port)
         self.channel = self.ssh.invoke_shell()
         self.stdin = self.channel.makefile('wb')
         self.stdout = self.channel.makefile('r')
@@ -21,10 +23,10 @@ class SshExecutor(BaseExecutor):
     def __del__(self):
         self.ssh.close()
 
-    def connect(self, ip, user, passwd, port, timeout: timedelta = timedelta(seconds=30)):
+    def connect(self, user, passwd, port, timeout: timedelta = timedelta(seconds=30)):
         self.ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
-            self.ssh.connect(ip, username=user, password=passwd,
+            self.ssh.connect(self.ip, username=user, password=passwd,
                              port=port, timeout=timeout.total_seconds())
         except paramiko.SSHException:
             raise Exception(f"An exception occurred while trying to connect to {self.ip}")
@@ -50,11 +52,11 @@ class SshExecutor(BaseExecutor):
                 result.stdout = []
             elif '__exit_code' not in line and \
                     not line.replace(' \r', '').strip().endswith(command):
-                result.stdout.append(line.replace('\b', '')
-                                     .replace('\r', '')
-                                     .replace('\x9B', '')
-                                     .replace('\x1B', '')
-                                     .replace('\n', ''))
+                result.stdout.append(
+                    re.compile(r'(\x9B|\x1B\[)[0-?]*[ -/]*[@-~]').sub('', line)
+                    .replace('\b', '')
+                    .replace('\r', '')
+                    .replace('\n', ''))
 
         if result.stdout:
             result.stdout = '\n'.join(result.stdout)

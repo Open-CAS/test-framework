@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 #
 
-import utils.linux_command
+import test_utils.linux_command
 import connection.base_executor
 import datetime
 import secrets
 import json
 from types import SimpleNamespace as Namespace
-from tools.fio.fio_result import FioResult
-from utils.size import Size
+from test_tools.fio.fio_result import FioResult
+from test_utils.size import Size
 from enum import Enum
 
 
@@ -56,9 +56,9 @@ class ReadWrite(Enum):
     write = 5
 
 
-class FioParam(utils.linux_command.LinuxCommand):
+class FioParam(test_utils.linux_command.LinuxCommand):
     def __init__(self, fio, command_executor: connection.base_executor.BaseExecutor, command_name):
-        utils.linux_command.LinuxCommand.__init__(self, command_executor, command_name)
+        test_utils.linux_command.LinuxCommand.__init__(self, command_executor, command_name)
         self.verification_pattern = ''
         self.fio = fio
 

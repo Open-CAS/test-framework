@@ -8,7 +8,7 @@ from .casctl import stop as casctl_stop
 from test_package.test_properties import TestProperties
 from enum import Enum
 from cas_configuration.cache_config import CacheLineSize, CacheMode, SeqCutOffPolicy, CleaningPolicy
-from utils.size import Size, Unit
+from test_utils.size import Size, Unit
 from typing import List
 
 

@@ -4,6 +4,10 @@
 #
 
 
+import logging
+
+
 class TestProperties:
     dut = None
     executor = None
+    LOGGER = logging.getLogger(__name__)

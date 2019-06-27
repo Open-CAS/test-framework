@@ -4,7 +4,7 @@
 #
 
 from enum import IntEnum, Enum
-from utils.size import Size, Unit
+from test_utils.size import Size, Unit
 
 
 class CacheLineSize(IntEnum):
