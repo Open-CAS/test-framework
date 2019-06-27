@@ -3,7 +3,8 @@
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 #
 
-from connection import base_executor
+
+from test_package.test_properties import TestProperties
 import logging
 from config import configuration
 
@@ -12,29 +13,30 @@ LOGGER = logging.getLogger(__name__)
 opencas_repo_name = "open-cas-linux"
 
 
-def install_opencas(executor: base_executor.BaseExecutor):
+def install_opencas():
     LOGGER.info("Cloning Open CAS repository.")
-    executor.execute(configuration.proxy_command)
-    executor.execute(f"cd {configuration.opencas_repo_path}")
-    executor.execute(f"if [ -d {opencas_repo_name} ]; then rm -rf {opencas_repo_name}; fi")
-    output = executor.execute(
+    TestProperties.executor.execute(configuration.proxy_command)
+    TestProperties.executor.execute(f"cd {configuration.opencas_repo_path}")
+    TestProperties.executor.execute(f"if [ -d {opencas_repo_name} ]; "
+                                    f"then rm -rf {opencas_repo_name}; fi")
+    output = TestProperties.executor.execute(
         "git clone --recursive https://github.com/Open-CAS/open-cas-linux.git")
     if output.exit_code != 0:
         raise Exception(f"Error while cloning repository: {output.stdout}\n{output.stderr}")
 
     LOGGER.info("Open CAS make and make install.")
-    output = executor.execute("cd open-cas-linux/ && ./configure && make")
+    output = TestProperties.executor.execute("cd open-cas-linux/ && ./configure && make")
     if output.exit_code != 0:
         raise Exception(
             f"Make command executed with nonzero status: {output.stdout}\n{output.stderr}")
 
-    output = executor.execute("make install")
+    output = TestProperties.executor.execute("make install")
     if output.exit_code != 0:
         raise Exception(
             f"Error while installing Open CAS: {output.stdout}\n{output.stderr}")
 
     LOGGER.info("Check if casadm is properly installed.")
-    output = executor.execute("casadm -V")
+    output = TestProperties.executor.execute("casadm -V")
     if output.exit_code != 0:
         raise Exception(
             "'casadm -V' command returned an error: {output.stdout}\n{output.stderr}")
@@ -42,14 +44,14 @@ def install_opencas(executor: base_executor.BaseExecutor):
         LOGGER.info(output.stdout)
 
 
-def uninstall_opencas(executor: base_executor.BaseExecutor):
+def uninstall_opencas():
     LOGGER.info("Uninstalling Open CAS.")
-    output = executor.execute("casadm -V")
+    output = TestProperties.executor.execute("casadm -V")
     if output.exit_code != 0:
         raise Exception("Open CAS is not properly installed.")
     else:
-        executor.execute(f"cd {configuration.opencas_repo_path}/{opencas_repo_name}")
-        output = executor.execute("make uninstall")
+        TestProperties.executor.execute(f"cd {configuration.opencas_repo_path}/{opencas_repo_name}")
+        output = TestProperties.executor.execute("make uninstall")
         if output.exit_code != 0:
             raise Exception(
                 f"There was an error during uninstall process: {output.stdout}\n{output.stderr}")

@@ -6,6 +6,8 @@
 import logging
 import pytest
 import time
+from utils.dut import Dut
+from test_package.test_properties import TestProperties
 
 
 LOGGER = logging.getLogger(__name__)
@@ -16,12 +18,20 @@ def setup_module():
 
 
 @pytest.mark.parametrize('prepare_and_cleanup',
-                         [{"core_type": "hdd", "core_count": 4}], indirect=True)
+                         [{"cache_type": "optane", "cache_count": 2}],
+                         indirect=True)
 def test_example(prepare_and_cleanup):
-    dut_info, executor = prepare_and_cleanup
-    LOGGER.info("RUN method")
-    LOGGER.info(dut_info)
-    output = executor.execute("hostname -I | awk '{print $1}'")
+    prepare(prepare_and_cleanup)
+    LOGGER.info("Test run")
+    LOGGER.info(f"DUT info: {TestProperties.dut}")
+    output = TestProperties.executor.execute("hostname -I | awk '{print $1}'")
     LOGGER.info(output.stdout)
-    assert output.stdout.strip() == dut_info['ip']
+    assert output.stdout.strip() == TestProperties.dut.ip
     time.sleep(5)
+
+
+def prepare(prepare_fixture):
+    LOGGER.info("Test prepare")
+    dut_info, executor = prepare_fixture
+    TestProperties.executor = executor
+    TestProperties.dut = Dut(dut_info)
