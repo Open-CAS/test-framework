@@ -9,6 +9,7 @@ import os
 import sys
 import importlib
 from IPy import IP
+from utils import disk_finder
 sys.path.append(os.path.join(os.path.dirname(__file__), os.path.pardir))
 
 # User should provide config/configuration.py with path to own test_wrapper,
@@ -97,6 +98,7 @@ def base_prepare(prepare_fixture):
     LOGGER.info("Initializing executor and dut information")
     dut_info, executor = prepare_fixture
     TestProperties.executor = executor
+    dut_info["disks"] = disk_finder.find_disks()
     TestProperties.dut = Dut(dut_info)
     LOGGER.info(f"DUT info: {TestProperties.dut}")
     if get_force_param() is not "False" and not hasattr(c, "already_updated"):

@@ -5,12 +5,12 @@
 
 import utils.linux_command as linux_comm
 import utils.size as size
-import connection.base_executor as executor
+from test_package.test_properties import TestProperties
 
 
 class Dd(linux_comm.LinuxCommand):
-    def __init__(self, command_executor: executor.BaseExecutor):
-        linux_comm.LinuxCommand.__init__(self, command_executor, 'dd')
+    def __init__(self):
+        linux_comm.LinuxCommand.__init__(self, TestProperties.executor, 'dd')
 
     def block_size(self, value: size.Size):
         return self.set_param('bs', int(value.get_value()))
