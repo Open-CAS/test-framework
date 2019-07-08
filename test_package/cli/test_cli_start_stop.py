@@ -20,14 +20,16 @@ LOGGER = logging.getLogger(__name__)
 def test_cli_start_stop_default_value(prepare_and_cleanup, shortcut):
     prepare(prepare_and_cleanup)
 
-    casadm.start("/dev/nvme0n1p1", shortcut=shortcut)
+    casadm.start_cache("/dev/nvme0n1p1", shortcut=shortcut)
 
-    output = casadm.list(shortcut=shortcut)
-    assert "/dev/nvme0n1p1" in output.stdout  # TODO:create casadm -L parsing api
+    parsed_output = casadm.parse_list_caches()
+    assert len(parsed_output["caches"]) == 1
+    assert parsed_output["caches"]["1"]["path"] == "/dev/nvme0n1p1"
 
-    casadm.stop(cache_id=1, shortcut=shortcut)
+    casadm.stop_cache(cache_id=1, shortcut=shortcut)
 
-    output = casadm.list(shortcut=shortcut)
+    output = casadm.list_caches(shortcut=shortcut)
+    assert len(casadm.parse_list_caches()["caches"]) == 0
     assert output.stdout == "No caches running"
 
 
@@ -38,19 +40,25 @@ def test_cli_start_stop_default_value(prepare_and_cleanup, shortcut):
 def test_cli_add_remove_default_value(prepare_and_cleanup, shortcut):
     prepare(prepare_and_cleanup)
 
-    casadm.start("/dev/nvme0n1p1", shortcut=shortcut)
+    casadm.start_cache("/dev/nvme0n1p1", shortcut=shortcut)
 
     casadm.add_core(1, "/dev/sdb2", shortcut=shortcut)
 
-    output = casadm.list(shortcut=shortcut)
-    assert "/dev/sdb2" in output.stdout  # TODO:create casadm -L parsing api
+    parsed_output = casadm.parse_list_caches()
+    assert len(parsed_output["cores"]) == 1
+    assert parsed_output["cores"]["1"]["path"] == "/dev/sdb2"
 
-    output = casadm.remove_core(1, 1, shortcut=shortcut)
-    assert "/dev/sdb2" not in output.stdout  # TODO:create casadm -L parsing api
+    casadm.remove_core(1, 1, shortcut=shortcut)
+    parsed_output = casadm.parse_list_caches()
+    assert len(parsed_output["caches"]) == 1
+    assert len(parsed_output["cores"]) == 0
 
-    casadm.stop(cache_id=1, shortcut=shortcut)
+    casadm.stop_cache(cache_id=1, shortcut=shortcut)
 
-    output = casadm.list(shortcut=shortcut)
+    output = casadm.list_caches(shortcut=shortcut)
+    parsed_output = casadm.parse_list_caches()
+    assert len(parsed_output["caches"]) == 0
+    assert len(parsed_output["cores"]) == 0
     assert output.stdout == "No caches running"
 
 
