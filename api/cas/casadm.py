@@ -34,10 +34,12 @@ def help(shortcut: bool = False):
 def start_cache(cache_dev: str, cache_mode: CacheMode = None,
                 cache_line_size: CacheLineSize = None, cache_id: int = None,
                 force: bool = False, load: bool = False, shortcut: bool = False):
-    cls = None if cache_line_size is None else str(CacheLineSize.get_value(Unit.KibiByte))
-    id = None if cache_id is None else str(cache_id)
+    _cache_line_size = None if cache_line_size is None else str(
+        CacheLineSize.get_value(Unit.KibiByte))
+    _cache_id = None if cache_id is None else str(cache_id)
     output = TestProperties.executor.execute(start_cmd(
-        cache_dev, cache_mode, cls, id, force, load, shortcut))
+        cache_dev=cache_dev, cache_mode=cache_mode, cache_line_size=_cache_line_size,
+        cache_id=_cache_id, force=force, load=load, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Failed to start cache. stdout: {output.stdout} \n stderr :{output.stderr}")
@@ -45,7 +47,8 @@ def start_cache(cache_dev: str, cache_mode: CacheMode = None,
 
 
 def stop_cache(cache_id: int, no_data_flush: bool = False, shortcut: bool = False):
-    output = TestProperties.executor.execute(stop_cmd(str(cache_id), no_data_flush, shortcut))
+    output = TestProperties.executor.execute(
+        stop_cmd(cache_id=str(cache_id), no_data_flush=no_data_flush, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Failed to stop cache. stdout: {output.stdout} \n stderr :{output.stderr}")
@@ -55,7 +58,8 @@ def stop_cache(cache_id: int, no_data_flush: bool = False, shortcut: bool = Fals
 def add_core(cache_id: int, core_dev: str, core_id: int = None, shortcut: bool = False):
     _core_id = None if core_id is None else str(id)
     output = TestProperties.executor.execute(
-        add_core_cmd(str(cache_id), core_dev, _core_id, shortcut))
+        add_core_cmd(cache_id=str(cache_id), core_dev=core_dev,
+                     core_id=_core_id, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Failed to add core. stdout: {output.stdout} \n stderr :{output.stderr}")
@@ -64,7 +68,8 @@ def add_core(cache_id: int, core_dev: str, core_id: int = None, shortcut: bool =
 
 def remove_core(cache_id: int, core_id: int, force: bool = False, shortcut: bool = False):
     output = TestProperties.executor.execute(
-        remove_core_cmd(str(cache_id), str(core_id), force, shortcut))
+        remove_core_cmd(cache_id=str(cache_id), core_id=str(core_id),
+                        force=force, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Failed to remove core. stdout: {output.stdout} \n stderr :{output.stderr}")
@@ -72,7 +77,8 @@ def remove_core(cache_id: int, core_id: int, force: bool = False, shortcut: bool
 
 
 def remove_detached(core_device: str, shortcut: bool = False):
-    output = TestProperties.executor.execute(remove_detached_cmd(core_device, shortcut))
+    output = TestProperties.executor.execute(
+        remove_detached_cmd(core_device=core_device, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Failed to remove detached core. stdout: {output.stdout} \n stderr :{output.stderr}")
@@ -81,7 +87,8 @@ def remove_detached(core_device: str, shortcut: bool = False):
 
 def reset_counters(cache_id: int, core_id: int = None, shortcut: bool = False):
     _core_id = None if core_id is None else str(core_id)
-    output = TestProperties.executor.execute(reset_counters(str(cache_id), _core_id, shortcut))
+    output = TestProperties.executor.execute(
+        reset_counters(cache_id=str(cache_id), core_id=_core_id, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Failed to reset counters. stdout: {output.stdout} \n stderr :{output.stderr}")
@@ -89,8 +96,10 @@ def reset_counters(cache_id: int, core_id: int = None, shortcut: bool = False):
 
 
 def flush(cache_id: int, core_id: int = None, shortcut: bool = False):
-    command = flush_cache_cmd(str(cache_id), shortcut) if core_id is None else flush_core_cmd(
-        str(cache_id), str(core_id), shortcut)
+    if core_id is None:
+        command = flush_cache_cmd(cache_id=str(cache_id), shortcut=shortcut)
+    else:
+        command = flush_core_cmd(cache_id=str(cache_id), core_id=str(core_id), shortcut=shortcut)
     output = TestProperties.executor.execute(command)
     if output.exit_code != 0:
         raise Exception(
@@ -99,7 +108,7 @@ def flush(cache_id: int, core_id: int = None, shortcut: bool = False):
 
 
 def load_cache(cache_dev: str, shortcut: bool = False):
-    output = TestProperties.executor.execute(load_cmd(cache_dev, shortcut))
+    output = TestProperties.executor.execute(load_cmd(cache_dev=cache_dev, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Failed to load cache. stdout: {output.stdout} \n stderr :{output.stderr}")
@@ -107,7 +116,8 @@ def load_cache(cache_dev: str, shortcut: bool = False):
 
 
 def list_caches(output_format: OutputFormat = None, shortcut: bool = False):
-    output = TestProperties.executor.execute(list_cmd(output_format, shortcut))
+    output = TestProperties.executor.execute(
+        list_cmd(output_format=output_format, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Failed to list caches. stdout: {output.stdout} \n stderr :{output.stderr}")
@@ -115,7 +125,8 @@ def list_caches(output_format: OutputFormat = None, shortcut: bool = False):
 
 
 def print_version(output_format: OutputFormat = None, shortcut: bool = False):
-    output = TestProperties.executor.execute(version_cmd(output_format, shortcut))
+    output = TestProperties.executor.execute(
+        version_cmd(output_format=output_format, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Failed to print version. stdout: {output.stdout} \n stderr :{output.stderr}")
@@ -123,7 +134,8 @@ def print_version(output_format: OutputFormat = None, shortcut: bool = False):
 
 
 def format_nvme(cache_dev: str, force: bool = False, shortcut: bool = False):
-    output = TestProperties.executor.execute(format_cmd(cache_dev, force, shortcut))
+    output = TestProperties.executor.execute(
+        format_cmd(cache_dev=cache_dev, force=force, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Format command failed. stdout: {output.stdout} \n stderr :{output.stderr}")
@@ -166,7 +178,9 @@ def print_statistics(cache_id: int, core_id: int = None, per_io_class: bool = Fa
         _filter = ",".join(filter)
     output = TestProperties.executor.execute(
         print_statistics_cmd(
-            str(cache_id), _core_id, per_io_class, _io_class_id, filter, output_format, shortcut))
+            cache_id=str(cache_id), core_id=_core_id,
+            per_io_class=per_io_class, io_class_id=_io_class_id,
+            filter=filter, output_format=output_format, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Printing statistics failed. stdout: {output.stdout} \n stderr :{output.stderr}")
@@ -180,7 +194,8 @@ def set_cache_mode(cache_mode: CacheMode, cache_id: int,
         flush_cache = "yes" if flush else "no"
 
     output = TestProperties.executor.execute(
-        set_cache_mode_cmd(cache_mode, str(cache_id), flush_cache, shortcut))
+        set_cache_mode_cmd(cache_mode=cache_mode, cache_id=str(cache_id),
+                           flush_cache=flush_cache, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Set cache mode command failed. stdout: {output.stdout} \n stderr :{output.stderr}")
@@ -188,7 +203,8 @@ def set_cache_mode(cache_mode: CacheMode, cache_id: int,
 
 
 def load_io_classes(cache_id: int, file: str, shortcut: bool = False):
-    output = TestProperties.executor.execute(load_io_classes_cmd(str(cache_id), file, shortcut))
+    output = TestProperties.executor.execute(
+        load_io_classes_cmd(cache_id=str(cache_id), file=file, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Load IO class command failed. stdout: {output.stdout} \n stderr :{output.stderr}")
@@ -197,7 +213,7 @@ def load_io_classes(cache_id: int, file: str, shortcut: bool = False):
 
 def list_io_classes(cache_id: int, output_format: OutputFormat, shortcut: bool = False):
     output = TestProperties.executor.execute(
-        list_io_classes_cmd(str(cache_id), output_format, shortcut))
+        list_io_classes_cmd(cache_id=str(cache_id), output_format=output_format, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"List IO class command failed. stdout: {output.stdout} \n stderr :{output.stderr}")
@@ -207,7 +223,8 @@ def list_io_classes(cache_id: int, output_format: OutputFormat, shortcut: bool =
 def get_param_cutoff(cache_id: int, core_id: int,
                      output_format: OutputFormat = None, shortcut: bool = False):
     output = TestProperties.executor.execute(
-        get_param_cutoff_cmd(str(cache_id), str(core_id), output_format, shortcut))
+        get_param_cutoff_cmd(cache_id=str(cache_id), core_id=str(core_id),
+                             output_format=output_format, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Getting sequential cutoff params failed."
@@ -217,7 +234,8 @@ def get_param_cutoff(cache_id: int, core_id: int,
 
 def get_param_cleaning(cache_id: int, output_format: OutputFormat = None, shortcut: bool = False):
     output = TestProperties.executor.execute(
-        get_param_cleaning_cmd(str(cache_id), output_format, shortcut))
+        get_param_cleaning_cmd(cache_id=str(cache_id), output_format=output_format,
+                               shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Getting cleaning policy params failed."
@@ -228,7 +246,8 @@ def get_param_cleaning(cache_id: int, output_format: OutputFormat = None, shortc
 def get_param_cleaning_alru(cache_id: int, output_format: OutputFormat = None,
                             shortcut: bool = False):
     output = TestProperties.executor.execute(
-        get_param_cleaning_alru_cmd(str(cache_id), output_format, shortcut))
+        get_param_cleaning_alru_cmd(cache_id=str(cache_id), output_format=output_format,
+                                    shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Getting alru cleaning policy params failed."
@@ -239,7 +258,8 @@ def get_param_cleaning_alru(cache_id: int, output_format: OutputFormat = None,
 def get_param_cleaning_acp(cache_id: int, output_format: OutputFormat = None,
                            shortcut: bool = False):
     output = TestProperties.executor.execute(
-        get_param_cleaning_acp_cmd(str(cache_id), output_format, shortcut))
+        get_param_cleaning_acp_cmd(cache_id=str(cache_id), output_format=output_format,
+                                   shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Getting acp cleaning policy params failed."
@@ -250,14 +270,13 @@ def get_param_cleaning_acp(cache_id: int, output_format: OutputFormat = None,
 def set_param_cutoff(cache_id: int, core_id: int = None, threshold: Size = None,
                      policy: SeqCutOffPolicy = None):
     if core_id is None:
-        output = TestProperties.executor.execute(
-            set_param_cutoff_cmd(
-                str(cache_id), threshold=threshold.get_value(Unit.KibiByte)), policy=policy)
+        command = set_param_cutoff_cmd(
+            cache_id=str(cache_id), threshold=threshold.get_value(Unit.KibiByte), policy=policy)
     else:
-        output = TestProperties.executor.execute(
-            set_param_cutoff_cmd(
-                str(cache_id), str(core_id),
-                threshold=threshold.get_value(Unit.KibiByte)), policy=policy)
+        command = set_param_cutoff_cmd(
+            cache_id=str(cache_id), core_id=str(core_id),
+            threshold=threshold.get_value(Unit.KibiByte), policy=policy)
+    output = TestProperties.executor.execute(command)
     if output.exit_code != 0:
         raise Exception(
             f"Error while setting sequential cut-off params."
@@ -266,7 +285,8 @@ def set_param_cutoff(cache_id: int, core_id: int = None, threshold: Size = None,
 
 
 def set_param_cleaning(cache_id: int, policy: CleaningPolicy):
-    output = TestProperties.executor.execute(set_param_cleaning_cmd(str(cache_id), policy))
+    output = TestProperties.executor.execute(
+        set_param_cleaning_cmd(cache_id=str(cache_id), policy=policy))
     if output.exit_code != 0:
         raise Exception(
             f"Error while setting cleaning policy."
@@ -278,8 +298,8 @@ def set_param_cleaning_alru(cache_id: int, wake_up: int = None, staleness_time: 
                             flush_max_buffers: int = None, activity_threshold: int = None):
     output = TestProperties.executor.execute(
         set_param_cleaning_alru_cmd(
-            str(cache_id), str(wake_up), str(staleness_time),
-            str(flush_max_buffers), str(activity_threshold)))
+            cache_id=str(cache_id), wake_up=str(wake_up), staleness_time=str(staleness_time),
+            flush_max_buffers=str(flush_max_buffers), activity_threshold=str(activity_threshold)))
     if output.exit_code != 0:
         raise Exception(
             f"Error while setting alru cleaning policy parameters."
@@ -289,7 +309,8 @@ def set_param_cleaning_alru(cache_id: int, wake_up: int = None, staleness_time: 
 
 def set_param_cleaning_acp(cache_id: int, wake_up: int = None, flush_max_buffers: int = None):
     output = TestProperties.executor.execute(
-        set_param_cleaning_acp_cmd(str(cache_id), str(wake_up), str(flush_max_buffers)))
+        set_param_cleaning_acp_cmd(cache_id=str(cache_id), wake_up=str(wake_up),
+                                   flush_max_buffers=str(flush_max_buffers)))
     if output.exit_code != 0:
         raise Exception(
             f"Error while setting acp cleaning policy parameters."

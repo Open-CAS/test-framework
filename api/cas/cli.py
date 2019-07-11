@@ -160,19 +160,23 @@ def _get_param_cmd(namespace: str, cache_id: str, output_format: str = None,
 def get_param_cutoff_cmd(cache_id: str, core_id: str,
                          output_format: str = None, shortcut: bool = False):
     add_param = (" -j " if shortcut else " --core-id ") + core_id
-    return _get_param_cmd("seq-cutoff", cache_id, output_format, add_param, shortcut)
+    return _get_param_cmd(namespace="seq-cutoff", cache_id=cache_id, output_format=output_format,
+                          additional_params=add_param, shortcut=shortcut)
 
 
 def get_param_cleaning_cmd(cache_id: str, output_format: str = None, shortcut: bool = False):
-    return _get_param_cmd("cleaning", cache_id, output_format, shortcut=shortcut)
+    return _get_param_cmd(namespace="cleaning", cache_id=cache_id,
+                          output_format=output_format, shortcut=shortcut)
 
 
 def get_param_cleaning_alru_cmd(cache_id: str, output_format: str = None, shortcut: bool = False):
-    return _get_param_cmd("cleaning-alru", cache_id, output_format, shortcut=shortcut)
+    return _get_param_cmd(namespace="cleaning-alru", cache_id=cache_id,
+                          output_format=output_format, shortcut=shortcut)
 
 
 def get_param_cleaning_acp_cmd(cache_id: str, output_format: str = None, shortcut: bool = False):
-    return _get_param_cmd("cleaning-acp", cache_id, output_format, shortcut=shortcut)
+    return _get_param_cmd(namespace="cleaning-acp", cache_id=cache_id,
+                          output_format=output_format, shortcut=shortcut)
 
 
 def _set_param_cmd(namespace: str, cache_id: str, additional_params: str = None,
@@ -192,12 +196,14 @@ def set_param_cutoff_cmd(cache_id: str, core_id: str = None, threshold: str = No
         add_params += (" --t " if shortcut else " --threshold ") + threshold
     if policy is not None:
         add_params += (" -p " if shortcut else " --policy ") + policy
-    return _set_param_cmd("seq-cutoff", cache_id, add_params, shortcut)
+    return _set_param_cmd(namespace="seq-cutoff", cache_id=cache_id,
+                          additional_params=add_params, shortcut=shortcut)
 
 
 def set_param_cleaning_cmd(cache_id: str, policy: str, shortcut: bool = False):
     add_params = (" -p " if shortcut else " --policy ") + policy
-    return _set_param_cmd("cleaning", cache_id, add_params, shortcut)
+    return _set_param_cmd(namespace="cleaning", cache_id=cache_id,
+                          additional_params=add_params, shortcut=shortcut)
 
 
 def set_param_cleaning_alru_cmd(cache_id: str, wake_up: str, staleness_time: str,
@@ -212,7 +218,8 @@ def set_param_cleaning_alru_cmd(cache_id: str, wake_up: str, staleness_time: str
         add_param += (" -b " if shortcut else " --flush-max-buffers ") + flush_max_buffers
     if activity_threshold is not None:
         add_param += (" -t " if shortcut else " --activity-threshold ") + activity_threshold
-    return _set_param_cmd("cleaning-alru", cache_id, add_param, shortcut)
+    return _set_param_cmd(namespace="cleaning-alru", cache_id=cache_id,
+                          additional_params=add_param, shortcut=shortcut)
 
 
 def set_param_cleaning_acp_cmd(cache_id: str, wake_up: str = None,
@@ -222,7 +229,8 @@ def set_param_cleaning_acp_cmd(cache_id: str, wake_up: str = None,
         add_param += (" -w " if shortcut else " --wake-up ") + wake_up
     if flush_max_buffers is not None:
         add_param += (" -b " if shortcut else " --flush-max-buffers ") + flush_max_buffers
-    return _set_param_cmd("cleaning-acp", cache_id, add_param, shortcut)
+    return _set_param_cmd(namespace="cleaning-acp", cache_id=cache_id,
+                          additional_params=add_param, shortcut=shortcut)
 
 
 def ctl_help(shortcut: bool = False):
