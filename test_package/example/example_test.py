@@ -29,7 +29,6 @@ def test_example(prepare_and_cleanup):
 @pytest.mark.parametrize('prepare_and_cleanup',
                          [{"cache_type": "nand", "cache_count": 1}],
                          indirect=True)
-@pytest.mark.skip
 def test_create_example_partitions(prepare_and_cleanup):
     prepare()
     TestProperties.LOGGER.info("Test run")

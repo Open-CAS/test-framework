@@ -26,7 +26,7 @@ class Disk(Device):
         self.block_size = Unit(block_size)
         self.disk_type = disk_type
         self.partition_table = None
-        self.partitions = []
+        self.partitions = []  # TODO: Create partitions discover method
 
     @classmethod
     def cast_to_disk(cls, disk):

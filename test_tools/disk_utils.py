@@ -186,6 +186,9 @@ def remove_partitions(device):
     if device.is_mounted():
         device.unmount()
 
+    for partition in device.partitions:
+        unmount(partition)
+
     TestProperties.LOGGER.info(f"Removing partitions from device: {device.system_path}.")
     dd = Dd().input("/dev/zero") \
         .output(device.system_path) \
