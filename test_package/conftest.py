@@ -57,7 +57,7 @@ def prepare_and_cleanup(request):
                 IP(dut_config.ip)
             except ValueError:
                 raise Exception("IP address from configuration file is in invalid format.")
-        TestProperties.dut = Dut(next(test_wrapper.run_test_wrapper(request, dut_config)))
+        TestProperties.dut = Dut(test_wrapper.prepare(request, dut_config))
     elif dut_config is not None:
         if hasattr(dut_config, 'ip'):
             try:
@@ -86,6 +86,8 @@ def prepare_and_cleanup(request):
     yield
     TestProperties.LOGGER.info("Test cleanup")
     casadm.stop_all_caches()
+    if os.path.exists(c.test_wrapper_dir):
+        test_wrapper.cleanup(TestProperties.dut)
 
 
 def pytest_addoption(parser):
