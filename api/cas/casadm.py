@@ -150,7 +150,7 @@ def format_nvme(cache_dev: Device, force: bool = False, shortcut: bool = False):
 def stop_all_caches():
     if "No caches running" in list_caches().stdout:
         return
-    LOGGER.info("Stop all caches")
+    TestProperties.LOGGER.info("Stop all caches")
     casctl_stop()
     output = list_caches()
     if "No caches running" not in output.stdout:
