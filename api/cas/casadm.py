@@ -188,7 +188,7 @@ def print_statistics(cache_id: int, core_id: int = None, per_io_class: bool = Fa
         print_statistics_cmd(
             cache_id=str(cache_id), core_id=_core_id,
             per_io_class=per_io_class, io_class_id=_io_class_id,
-            filter=filter, output_format=_output_format, shortcut=shortcut))
+            filter=_filter, output_format=_output_format, shortcut=shortcut))
     if output.exit_code != 0:
         raise Exception(
             f"Printing statistics failed. stdout: {output.stdout} \n stderr :{output.stderr}")
