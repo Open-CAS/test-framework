@@ -203,7 +203,7 @@ def remove_partitions(device):
 
 
 def mount(device, mount_point):
-    TestProperties.LOGGER(f"Mounting device {device.system_path} to {mount_point}.")
+    TestProperties.LOGGER.info(f"Mounting device {device.system_path} to {mount_point}.")
     cmd = f"mount {device.system_path} {mount_point}"
     output = TestProperties.executor.execute(cmd)
     if output.exit_code != 0:
@@ -213,7 +213,7 @@ def mount(device, mount_point):
 
 
 def unmount(device):
-    TestProperties.LOGGER(f"Unmounting device {device.system_path}.")
+    TestProperties.LOGGER.info(f"Unmounting device {device.system_path}.")
     if device.mount_point is not None:
         output = TestProperties.executor.execute(f"umount {device.mount_point}")
         if output.exit_code != 0:
