@@ -8,6 +8,9 @@ from test_tools.disk_utils import Filesystem
 from test_utils.size import Size, Unit
 from test_package.test_properties import TestProperties
 from test_package.conftest import base_prepare
+from test_utils.file import File
+from test_utils.directory import Directory
+from test_tools import fs_utils
 
 
 def setup_module():
@@ -43,6 +46,25 @@ def test_create_example_partitions(prepare_and_cleanup):
     test_disk.create_partitions(part_sizes)
     TestProperties.LOGGER.info(f"DUT info: {TestProperties.dut}")
     test_disk.partitions[0].create_filesystem(Filesystem.ext3)
+
+
+@pytest.mark.parametrize('prepare_and_cleanup',
+                         [{"cache_type": "nand", "cache_count": 1}],
+                         indirect=True)
+def test_create_example_files(prepare_and_cleanup):
+    prepare()
+    TestProperties.LOGGER.info("Test run")
+    file1 = File.create_file("/home/user/example_file")
+    file1.write("Test file\ncontent line\ncontent")
+    TestProperties.LOGGER.info(f"File content: {file1.read()}")
+    fs_utils.replace_in_lines(file1, 'content line', 'replaced line')
+    file2 = file1.copy('/tmp', force=True)
+    assert file1.md5sum() == file2.md5sum()
+    fs_utils.remove(file2.full_path, True)
+    dir1 = Directory("/home/user")
+    dir_content = dir1.ls()
+    for item in dir_content:
+        TestProperties.LOGGER.info(f"Item {str(item)} - {type(item).__name__}")
 
 
 def prepare():
