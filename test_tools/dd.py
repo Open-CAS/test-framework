@@ -27,5 +27,14 @@ class Dd(linux_comm.LinuxCommand):
     def oflag(self, *values):
         return self.set_param('oflag', *values)
 
+    def conv(self, *values):
+        return self.set_param('conv', *values)
+
     def output(self, value):
         return self.set_param('of', value)
+
+    def seek(self, value):
+        return self.set_param('seek', value)
+
+    def skip(self, value):
+        return self.set_param('skip', value)
