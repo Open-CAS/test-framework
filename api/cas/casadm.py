@@ -175,7 +175,8 @@ def parse_list_caches():
 
 def print_statistics(cache_id: int, core_id: int = None, per_io_class: bool = False,
                      io_class_id: int = None, filter: List[StatsFilter] = None,
-                     output_format: OutputFormat = None, shortcut: bool = False):
+                     output_format: OutputFormat = None, perform_sync: bool = False,
+                     shortcut: bool = False):
     _output_format = None if output_format is None else output_format.name
     _core_id = None if core_id is None else str(core_id)
     _io_class_id = None if io_class_id is None else str(io_class_id)
@@ -184,6 +185,11 @@ def print_statistics(cache_id: int, core_id: int = None, per_io_class: bool = Fa
     else:
         names = (x.name for x in filter)
         _filter = ",".join(names)
+    if perform_sync:
+        output = TestProperties.executor.execute("sync")
+        if output.exit_code != 0:
+            raise Exception(
+                f"Sync command failed. stdout: {output.stdout} \n stderr :{output.stderr}")
     output = TestProperties.executor.execute(
         print_statistics_cmd(
             cache_id=str(cache_id), core_id=_core_id,
