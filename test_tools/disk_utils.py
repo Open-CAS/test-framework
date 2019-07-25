@@ -214,6 +214,7 @@ def mount(device, mount_point):
     if output.exit_code != 0:
         TestProperties.LOGGER.error(f"Failed to mount {device.system_path} to {mount_point}")
         return False
+    device.mount_point = mount_point
     return True
 
 
