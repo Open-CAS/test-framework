@@ -10,6 +10,7 @@ from packaging import version
 
 from core.test_run import TestRun
 from test_utils.filesystem.file import File
+from test_tools import fs_utils
 
 
 class DropCachesMode(IntFlag):
@@ -106,3 +107,27 @@ def sync():
     if output.exit_code != 0:
         raise Exception(
             f"Sync command failed. stdout: {output.stdout} \n stderr :{output.stderr}")
+
+
+def check_files(core, size_before, permissions_before, md5_before, mount_point='/big/cas/',
+                test_file_path=f"/mnt/cas/test_file"):
+    TestRun.LOGGER.info("Checking file md5.")
+    core.mount(mount_point)
+    file_after = fs_utils.parse_ls_output(fs_utils.ls(test_file_path))[0]
+    md5_after = file_after.md5sum()
+    if md5_before != md5_after:
+        TestRun.LOGGER.error(f"Md5 before ({md5_before}) and after ({md5_after}) are different.")
+
+    if permissions_before.user == file_after.permissions.user:
+        TestRun.LOGGER.error(f"User permissions before ({permissions_before.user}) "
+                             f"and after ({file_after.permissions.user}) are different.")
+    if permissions_before.group != file_after.permissions.group:
+        TestRun.LOGGER.error(f"Group permissions before ({permissions_before.group}) "
+                             f"and after ({file_after.permissions.group}) are different.")
+    if permissions_before.other != file_after.permissions.other:
+        TestRun.LOGGER.error(f"Other permissions before ({permissions_before.other}) "
+                             f"and after ({file_after.permissions.other}) are different.")
+    if size_before != file_after.size:
+        TestRun.LOGGER.error(f"Size before ({size_before}) and after ({file_after.size}) "
+                             f"are different.")
+    core.unmount()
