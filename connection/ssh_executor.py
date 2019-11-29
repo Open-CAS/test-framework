@@ -93,4 +93,4 @@ class SshExecutor(BaseExecutor):
                     return
                 except Exception:
                     continue
-            TestRun.exception("Timeout occurred while tying to establish ssh connection")
+            raise ConnectionError("Timeout occurred while tying to establish ssh connection")

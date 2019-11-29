@@ -17,14 +17,14 @@ def find_disks():
     #  There will be isdct installator in case, when it is not installed
     output = TestRun.executor.run('isdct')
     if output.exit_code != 0:
-        TestRun.exception(f"Error while executing command: 'isdct'. Stdout: {output.stdout} \n"
-                          f"stderr: {output.stderr}")
+        raise Exception(f"Error while executing command: 'isdct'.\n"
+                        f"stdout: {output.stdout}\nstderr: {output.stderr}")
     get_block_devices_list(block_devices)
     try:
         discover_ssd_devices(block_devices, devices_result)
         discover_hdd_devices(block_devices, devices_result)
     except Exception as e:
-        TestRun.exception(f"Exception occurred while looking for disks: {str(e)}")
+        raise Exception(f"Exception occurred while looking for disks: {str(e)}")
 
     return devices_result
 

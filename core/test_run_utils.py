@@ -39,7 +39,7 @@ def __prepare(cls, item):
     req_disks = list(map(lambda mark: mark.args, cls.item.iter_markers(name="require_disk")))
     cls.req_disks = dict(req_disks)
     if len(req_disks) != len(cls.req_disks):
-        TestRun.exception("Disk name specified more than once!")
+        raise Exception("Disk name specified more than once!")
 
 
 TestRun.prepare = __prepare
@@ -113,9 +113,28 @@ def __setup(cls, dut_config):
     try:
         cls.dut = Dut(dut_config)
     except Exception as ex:
-        TestRun.LOGGER.exception(f"Failed to setup DUT instance:\n"
-                                 f"{str(ex)}\n{traceback.format_exc()}")
+        raise Exception(f"Failed to setup DUT instance:\n"
+                        f"{str(ex)}\n{traceback.format_exc()}")
     cls.__setup_disks()
 
 
 TestRun.setup = __setup
+
+
+@classmethod
+def __makereport(cls, item, call, res):
+    cls.outcome = res.outcome
+
+    from _pytest.outcomes import Failed
+    from core.test_run import Blocked
+    if res.when == "call" and res.failed:
+        msg = f"{call.excinfo.type.__name__}: {call.excinfo.value}"
+        if call.excinfo.type is Failed:
+            cls.LOGGER.error(msg)
+        elif call.excinfo.type is Blocked:
+            cls.LOGGER.blocked(msg)
+        else:
+            cls.LOGGER.exception(msg)
+
+
+TestRun.makereport = __makereport
