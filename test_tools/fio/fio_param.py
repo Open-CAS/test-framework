@@ -257,12 +257,12 @@ class FioParam(LinuxCommand):
     def edit_global(self):
         return self.fio.global_cmd_parameters
 
-    def run(self):
+    def run(self, allow_errors: bool = False):
         self.fio.base_cmd_parameters.set_flags("group_reporting")
         if "per_job_logs" in self.fio.global_cmd_parameters.command_param_dict:
             self.fio.global_cmd_parameters.set_param("per_job_logs", '0')
         fio_output = self.fio.run()
-        if fio_output.exit_code != 0:
+        if fio_output.exit_code != 0 and not allow_errors:
             raise Exception(f"Exception occurred while trying to execute fio, exit_code:"
                             f"{fio_output.exit_code}.\n"
                             f"stdout: {fio_output.stdout}\nstderr: {fio_output.stderr}")
