@@ -43,6 +43,16 @@ class BaseExecutor:
         if output is not None:
             return int(output.stdout)
 
+    def run_as_other_user(self, command, user_name: str, sudo: bool = False):
+        prefix = f'sudo -u {user_name}'
+        if sudo:
+            command = 'sudo ' + command
+        command = f'{prefix} {command}'
+        output = self.run(command)
+        if output.exit_code != 0:
+            raise CmdException("Must be run as root.", output)
+        return output
+
     def wait_cmd_finish(self, pid: int, timeout: timedelta = timedelta(minutes=30)):
         self.run(f"tail --pid={pid} -f /dev/null", timeout)
 
