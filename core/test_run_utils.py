@@ -9,6 +9,7 @@ from IPy import IP
 
 from connection.ssh_executor import SshExecutor
 from connection.local_executor import LocalExecutor
+from log.logger import create_log
 from storage_devices.disk import Disk
 from test_utils import disk_finder
 from test_utils.dut import Dut
@@ -41,6 +42,12 @@ def __prepare(cls, item):
     cls.req_disks = dict(req_disks)
     if len(req_disks) != len(cls.req_disks):
         raise Exception("Disk name specified more than once!")
+
+    test_name = item.name.split('[')[0]
+    test_params = []
+    for name, value in item.callspec.params.items():
+        test_params.append(f"{name}-{value}")
+    TestRun.LOGGER = create_log(item.config.getoption('--log-path'), test_name, test_params)
 
 
 TestRun.prepare = __prepare
