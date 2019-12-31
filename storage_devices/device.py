@@ -4,8 +4,8 @@
 #
 
 
-from test_tools import disk_utils
 from core.test_run import TestRun
+from test_tools import disk_utils
 from test_utils.size import Size, Unit
 
 
@@ -50,3 +50,8 @@ class Device:
         from test_tools import fs_utils
         output = fs_utils.ls(f"$(find -L {directory} -samefile {self.system_path})")
         return fs_utils.parse_ls_output(output, self.system_path)
+
+    @staticmethod
+    def get_scsi_devices():
+        scsi_devices = TestRun.executor.run("lsscsi | grep Linux").stdout
+        return [Device(scsi_device.split()[-1]) for scsi_device in scsi_devices.splitlines()]

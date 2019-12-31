@@ -4,17 +4,17 @@
 #
 
 
+import traceback
+
 import pytest
 from IPy import IP
 
-from connection.ssh_executor import SshExecutor
+import core.test_run
 from connection.local_executor import LocalExecutor
+from connection.ssh_executor import SshExecutor
 from storage_devices.disk import Disk
 from test_utils import disk_finder
 from test_utils.dut import Dut
-import core.test_run
-import traceback
-
 
 TestRun = core.test_run.TestRun
 
@@ -29,6 +29,12 @@ def __configure(cls, config):
         "markers",
         "remote_only: run test only in case of remote execution, otherwise skip"
     )
+    # scsi_debug_params are standard scsi_debug kernel module parameters given as kwargs
+    config.addinivalue_line(
+        "markers",
+        "scsi_debug_params: create scsi_debug devices with provided "
+        "parameters"
+    )
 
 
 TestRun.configure = __configure
@@ -41,6 +47,12 @@ def __prepare(cls, item):
     cls.req_disks = dict(req_disks)
     if len(req_disks) != len(cls.req_disks):
         raise Exception("Disk name specified more than once!")
+
+    scsi_params = \
+        list(map(lambda mark: mark.kwargs, cls.item.iter_markers(name="scsi_debug_params")))
+    if len(scsi_params):
+        cls.scsi_params = scsi_params[0]
+        cls.scsi_params["opts"] = "1"
 
 
 TestRun.prepare = __prepare
