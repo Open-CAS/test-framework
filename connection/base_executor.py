@@ -28,8 +28,6 @@ class BaseExecutor:
         pass
 
     def run(self, command, timeout: timedelta = timedelta(minutes=30)):
-        if TestRun.dut and TestRun.dut.env:
-            command = f"{TestRun.dut.env} && {command}"
         command_id = TestRun.LOGGER.get_new_command_id()
         TestRun.LOGGER.write_command_to_command_log(command, command_id)
         output = self._execute(command, timeout)
@@ -37,7 +35,7 @@ class BaseExecutor:
         return output
 
     def run_in_background(self, command):
-        command += "&> /dev/null &echo $!"
+        command += " &> /dev/null &echo $!"
         output = self.run(command)
 
         if output is not None:
