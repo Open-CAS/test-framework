@@ -75,23 +75,77 @@ class Size:
     def __add__(self, other):
         return Size(self.get_value() + other.get_value())
 
+    @multimethod
     def __lt__(self, other):
         return self.get_value() < other.get_value()
 
+    @multimethod
+    def __lt__(self, other: int):
+        return self.get_value() < other
+
+    @multimethod
+    def __lt__(self, other: float):
+        return self.get_value() < other
+
+    @multimethod
     def __le__(self, other):
         return self.get_value() <= other.get_value()
 
+    @multimethod
+    def __le__(self, other: int):
+        return self.get_value() <= other
+
+    @multimethod
+    def __le__(self, other: float):
+        return self.get_value() <= other
+
+    @multimethod
     def __eq__(self, other):
         return self.get_value() == other.get_value()
 
+    @multimethod
+    def __eq__(self, other: int):
+        return self.get_value() == other
+
+    @multimethod
+    def __eq__(self, other: float):
+        return self.get_value() == other
+
+    @multimethod
     def __ne__(self, other):
         return self.get_value() != other.get_value()
 
+    @multimethod
+    def __ne__(self, other: int):
+        return self.get_value() != other
+
+    @multimethod
+    def __ne__(self, other: float):
+        return self.get_value() != other
+
+    @multimethod
     def __gt__(self, other):
         return self.get_value() > other.get_value()
 
+    @multimethod
+    def __gt__(self, other: int):
+        return self.get_value() > other
+
+    @multimethod
+    def __gt__(self, other: float):
+        return self.get_value() > other
+
+    @multimethod
     def __ge__(self, other):
         return self.get_value() >= other.get_value()
+
+    @multimethod
+    def __ge__(self, other: int):
+        return self.get_value() >= other
+
+    @multimethod
+    def __ge__(self, other: float):
+        return self.get_value() >= other
 
     def __sub__(self, other):
         if self < other:
