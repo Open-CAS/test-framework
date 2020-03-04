@@ -187,9 +187,17 @@ class Log(HtmlLogManager, metaclass=Singleton):
                 log_destination_path = os.path.join(self.base_dir, "dut_info", f'{key}.log')
                 if type(TestRun.executor) is SshExecutor:
                     sftp = TestRun.executor.ssh.open_sftp()
+                    if key is "messages":
+                        try:
+                            sftp.stat(log_files[key])
+                        except FileNotFoundError:
+                            log_files[key] = "/var/log/syslog"
                     sftp.get(log_files[key], log_destination_path)
                     sftp.close()
                 elif type(TestRun.executor) is LocalExecutor:
+                    if key is "messages":
+                        if not os.path.isfile(log_files[key]):
+                            log_files[key] = "/var/log/syslog"
                     TestRun.executor.run(f"cp {log_files[key]} {log_destination_path}")
             except Exception as e:
                 TestRun.LOGGER.warning(f"There was a problem during gathering {key} log.\n"
