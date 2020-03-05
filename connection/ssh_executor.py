@@ -52,7 +52,7 @@ class SshExecutor(BaseExecutor):
         return Output(stdout.read(), stderr.read(), stdout.channel.recv_exit_status())
 
     def rsync(self, src, dst, delete=False, symlinks=False, exclude_list=[],
-              timeout: timedelta = timedelta(seconds=30)):
+              timeout: timedelta = timedelta(seconds=30), dut_to_controller=False):
         options = []
 
         if delete:
@@ -67,7 +67,9 @@ class SshExecutor(BaseExecutor):
             f'sshpass -p "{self.password}" '
             f'rsync -r -e "ssh -p {self.port} -o UserKnownHostsFile=/dev/null '
             f'-o StrictHostKeyChecking=no" '
-            f'{src} {self.user}@{self.ip}:{dst} {" ".join(options)}',
+            f'{self.user}@{self.ip}:{src} {dst} ' if dut_to_controller else
+                f'{src} {self.user}@{self.ip}:{dst} '
+            f'{" ".join(options)}',
             shell=True,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,

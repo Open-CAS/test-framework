@@ -18,6 +18,14 @@ class BaseExecutor:
     def rsync(self, src, dst, delete, symlinks, exclude_list, timeout):
         raise NotImplementedError()
 
+    def rsync_to(self, src, dst, delete=False, symlinks=False, exclude_list=[],
+                 timeout: timedelta = timedelta(seconds=30)):
+        return self.rsync(src, dst, delete, symlinks, exclude_list, timeout, False)
+
+    def rsync_from(self, src, dst, delete=False, symlinks=False, exclude_list=[],
+                 timeout: timedelta = timedelta(seconds=30)):
+        return self.rsync(src, dst, delete, symlinks, exclude_list, timeout, True)
+
     def is_remote(self):
         return False
 
