@@ -35,6 +35,14 @@ def __configure(cls, config):
         "markers",
         "remote_only: run test only in case of remote execution, otherwise skip"
     )
+    config.addinivalue_line(
+        "markers",
+        "require_compatible_kernel: require minimum two compatible kernel versions"
+    )
+    config.addinivalue_line(
+        "markers",
+        "require_incompatible_kernel: require minimum two incompatible kernel versions"
+    )
 
 
 TestRun.configure = __configure
@@ -119,6 +127,14 @@ def __setup(cls):
 
     if list(cls.item.iter_markers(name="remote_only")):
         if not cls.executor.is_remote():
+            pytest.skip()
+
+    if list(cls.item.iter_markers(name="require_compatible_kernel")):
+        if not cls.executor.got_compatible_kernels():
+            pytest.skip()
+
+    if list(cls.item.iter_markers(name="require_incompatible_kernel")):
+        if not cls.executor.got_incompatible_kernels():
             pytest.skip()
 
     Disk.plug_all_disks()

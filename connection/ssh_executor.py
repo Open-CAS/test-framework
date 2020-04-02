@@ -95,6 +95,50 @@ class SshExecutor(BaseExecutor):
         except Exception:
             return False
 
+    def got_compatible_kernels(self):
+        count = 0
+        try:
+            grub_ver = self.run("ls /boot | grep grub").stdout.splitlines()[-1]
+            kernel_ver = self.run("uname -r").stdout.split("-")[0]
+            kernels = self.run(
+                "awk '/menuentry/ && /class/ {count++; print count-1\"#\"$0 }' "
+                f"/boot/{grub_ver}/grub.cfg").stdout.splitlines()
+
+            for version in kernels:
+                version = version.split('--')[0]
+                if ("rescue" or "recovery") in version.lower():
+                    continue
+                if kernel_ver in version:
+                    count += 1
+
+        except Exception:
+            pass
+
+        finally:
+            return True if count > 1 else False
+
+    def got_incompatible_kernels(self):
+        count = 0
+        try:
+            grub_ver = self.run("ls /boot | grep grub").stdout[-1]
+            kernel_ver = self.run("uname -r").stdout.split("-")[0]
+            kernels = self.run(
+                "awk '/menuentry/ && /class/ {count++; print count-1\"#\"$0 }' "
+                f"/boot/{grub_ver}/grub.cfg").stdout.splitlines()
+
+            for version in kernels:
+                version = version.split('--')[0]
+                if ("rescue" or "recovery") in version.lower():
+                    continue
+                if kernel_ver not in version:
+                    count += 1
+
+        except Exception:
+            pass
+
+        finally:
+            return True if count > 0 else False
+
     def wait_for_connection(self, timeout: timedelta = timedelta(minutes=10)):
         start_time = datetime.now()
         with TestRun.group("Waiting for DUT ssh connection"):
