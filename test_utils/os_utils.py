@@ -81,7 +81,7 @@ def load_kernel_module(module_name, module_args: {str, str}=None):
 
 def unload_kernel_module(module_name, unload_method: ModuleRemoveMethod = ModuleRemoveMethod.rmmod):
     cmd = f"{unload_method.value} {module_name}"
-    return TestRun.executor.run_expect_success(cmd)
+    return TestRun.executor.run(cmd)
 
 
 def is_mounted(path: str):
