@@ -47,7 +47,7 @@ def __configure(cls, config):
         "parametrizex(argname, argvalues): sparse parametrized testing"
     )
 
-    cls.random_seed = config.getoption("--random-seed") or random.randrange(sys.maxsize)
+    cls.random_seed = config.getoption("--random-seed", random.randrange(sys.maxsize))
     random.seed(cls.random_seed)
 
 
