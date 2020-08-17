@@ -14,6 +14,7 @@ class ScsiDebug:
     def __init__(self, params, config):
         self.params = params
         self.module_name = "scsi_debug"
+        self.config = config
 
     def pre_setup(self):
         pass
