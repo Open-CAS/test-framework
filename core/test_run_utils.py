@@ -123,6 +123,7 @@ def __presetup(cls):
                 cls.config['password'],
                 port
             )
+            cls.executor.connect()
         else:
             TestRun.block("There are no credentials in config.")
     elif cls.config['type'] == 'local':
@@ -136,6 +137,8 @@ TestRun.presetup = __presetup
 
 @classmethod
 def __setup(cls):
+    cls.presetup()
+
     if list(cls.item.iter_markers(name="remote_only")):
         if not cls.executor.is_remote():
             pytest.skip()
