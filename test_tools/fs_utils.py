@@ -62,6 +62,10 @@ def check_if_file_exists(path):
     return TestRun.executor.run(f"test -e {path}").exit_code == 0
 
 
+def check_if_symlink_exists(path):
+    return TestRun.executor.run(f"test -L {path}").exit_code == 0
+
+
 def copy(source: str,
          destination: str,
          force: bool = False,
