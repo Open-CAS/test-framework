@@ -72,3 +72,46 @@ class CacheLineSize(Enum):
     ocf_cache_line_size_64 = ctypes.c_ulonglong(64).value * KiB
     default = ocf_cache_line_size_4
 
+
+class StartCacheStructure(ctypes.Structure):
+    _fields_ = [
+        ('cache_id', ctypes.c_uint16),
+        ('init_cache', ctypes.c_uint8),
+        ('cache_path_name', ctypes.c_char * MAX_STR_LEN),
+        ('caching_mode', ctypes.c_int),
+        ('eviction_policy', ctypes.c_int),
+        ('flush_data', ctypes.c_uint8),
+        ('line_size', ctypes.c_ulonglong),
+        ('force', ctypes.c_uint8),
+        ('min_free_ram', ctypes.c_uint64),
+        ('metadata_mode_optimal', ctypes.c_uint8),
+        ('cache_elevator', ctypes.c_char * MAX_ELEVATOR_NAME),
+        ('ext_err_code', ctypes.c_int)
+    ]
+
+    def __repr__(self):
+        return (f'cache_id: {self.cache_id}\n'
+                f'init_cache: {self.init_cache}\n'
+                f'cache_path_name: {self.cache_path_name}\n'
+                f'caching_mode: {self.caching_mode}\n'
+                f'eviction_policy: {self.eviction_policy}\n'
+                f'flush_data: {self.flush_data}\n'
+                f'line_size: {self.line_size}\n'
+                f'force: {self.force}\n'
+                f'min_free_ram: {self.min_free_ram}\n'
+                f'metadata_mode_optimal: {self.metadata_mode_optimal}\n'
+                f'cache_elevator: {self.cache_elevator}\n'
+                f'ext_err_code: {self.ext_err_code}\n')
+
+
+class StopCacheStructure(ctypes.Structure):
+    _fields_ = [
+        ('cache_id', ctypes.c_uint16),
+        ('flush_data', ctypes.c_uint8),
+        ('ext_err_code', ctypes.c_int)
+    ]
+
+    def __repr__(self):
+        return (f'cache_id: {self.cache_id}\n'
+                f'flush_data: {self.flush_data}\n'
+                f'ext_err_code: {self.ext_err_code}\n')
