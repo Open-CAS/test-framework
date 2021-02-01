@@ -4,7 +4,12 @@
 #
 
 import ctypes
+import os
+import marshal
+from time import sleep
 
+from core.test_run import TestRun
+from test_tools.fs_utils import chmod_numerical, remove, check_if_directory_exists, create_directory
 
 IOC_NRBITS = 8
 IOC_TYPEBITS = 8
@@ -100,3 +105,38 @@ def IOC_NR(nr):
 
 def IOC_SIZE(nr):
     return (nr >> IOC_SIZESHIFT) & IOC_SIZEMASK
+
+
+temp_dir = '/tmp/cas'
+struct_path = os.path.join(temp_dir, 'dump_file')
+script_source = os.path.join(f'{os.path.dirname(__file__)}', 'send_ioctl_script.py')
+script_dest = os.path.join(temp_dir, 'send_ioctl_script.py')
+
+
+def send_script_with_dumped_args():
+    if not check_if_directory_exists(temp_dir):
+        create_directory(temp_dir, True)
+
+    TestRun.executor.rsync_to(script_source, script_dest)
+    chmod_numerical(script_dest, 550)
+
+    TestRun.executor.rsync_to(struct_path, struct_path)
+    chmod_numerical(struct_path, 440)
+
+
+def cas_ioctl(cas_ioctl_request, interrupt: bool = False):
+    with open(struct_path, 'wb') as dump_file:
+        marshal.dump(cas_ioctl_request.command_struct, dump_file)
+    send_script_with_dumped_args()
+    if interrupt:
+        pid = TestRun.executor.run_in_background(
+            f"{script_dest} -c {cas_ioctl_request.command} -s {struct_path}"
+        )
+        sleep(2)
+        TestRun.executor.kill_process(pid)
+    else:
+        TestRun.executor.run(f"{script_dest} -c {cas_ioctl_request.command} -s {struct_path}")
+    if check_if_directory_exists(temp_dir):
+        remove(temp_dir, True, True, True)
+    if os.path.exists(struct_path):
+        os.remove(struct_path)
