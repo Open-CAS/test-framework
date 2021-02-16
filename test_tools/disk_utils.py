@@ -304,7 +304,7 @@ def check_if_device_supports_trim(device):
 
 
 def get_device_filesystem_type(device_id):
-    cmd = f'lsblk -l -o NAME,FSTYPE | uniq | grep "{device_id} "'
+    cmd = f'lsblk -l -o NAME,FSTYPE | sort | uniq | grep "{device_id} "'
     try:
         stdout = TestRun.executor.run_expect_success(cmd).stdout
     except CmdException:
