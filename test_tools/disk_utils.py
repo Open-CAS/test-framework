@@ -336,27 +336,9 @@ def _is_dev_path_whitelisted(path: str):
     return re.search(r"cas\d+-\d+", path) is not None
 
 
-def _is_dev_path_blacklisted(path: str):
-    """check if given path is blacklisted"""
-    dev_by_id_dir = "/dev/disk/by-id"
-    by_id_paths = parse_ls_output(ls(dev_by_id_dir), dev_by_id_dir)
-    blacklist = ["/dev/disk/by-id/lvm", "/dev/disk/by-id/md-name"]
-    for x in blacklist:
-        for entry in by_id_paths:
-            if not entry.full_path.startswith(x):
-                continue
-            if path == entry:
-                return True
-    return False
-
-
 def validate_dev_path(path: str):
     if not os.path.isabs(path):
         raise ValueError(f'Given path "{path}" is not absolute.')
-
-    if _is_dev_path_blacklisted(path):
-        raise ValueError(f'Given path "{path}" is forbidden.'
-                         f'Please use other path do this device.')
 
     if _is_dev_path_whitelisted(path):
         return path

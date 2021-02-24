@@ -5,7 +5,6 @@
 import re
 
 from core.test_run import TestRun
-from test_tools.fs_utils import readlink
 from test_utils.size import Unit
 
 
@@ -53,7 +52,7 @@ class Mdadm:
             lines = device_details.splitlines()
             key = "/dev/" + lines[0].rstrip(':')
             details[key] = {}
-            details[key]["path"] = readlink(key)
+            details[key]["path"] = key
             details[key]["devices"] = cls.__parse_devices(device_details)
             details[key]["level"] = cls.__parse_level(device_details)
             details[key]["uuid"] = cls.__parse_uuid(device_details)

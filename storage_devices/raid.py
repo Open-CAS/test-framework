@@ -158,7 +158,7 @@ class Raid(Disk):
         Mdadm.create(raid_conf, get_devices_paths_string(volume_devices))
 
         raid_link = md_dir_path + raid_conf.name
-        raid = [r for r in Mdadm.examine_result() if r["path"] == readlink(raid_link)][0]
+        raid = [r for r in Mdadm.examine_result() if readlink(r["path"]) == readlink(raid_link)][0]
 
         return cls(
             raid["path"],
