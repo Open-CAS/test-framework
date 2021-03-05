@@ -2,7 +2,7 @@
 # Copyright(c) 2019-2021 Intel Corporation
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 #
-import ntpath
+import os
 
 from test_tools.dd import Dd
 from test_utils.filesystem.fs_item import FsItem
@@ -80,17 +80,17 @@ class FileProperties:
 
     @staticmethod
     def get_parent_dir(path):
-        head, tail = ntpath.split(path)
+        head, tail = os.path.split(path)
         if tail:
             return head
         else:
-            head, tail = ntpath.split(head)
+            head, tail = os.path.split(head)
             return head
 
     @staticmethod
     def get_name(path):
-        head, tail = ntpath.split(path)
-        return tail or ntpath.basename(head)
+        head, tail = os.path.split(path)
+        return tail or os.path.basename(head)
 
     def __eq__(self, other):
         return (self.permissions == other.permissions and self.size == other.size

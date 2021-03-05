@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 #
 
-import ntpath
+import os
 
 from test_tools import fs_utils
 
@@ -22,16 +22,16 @@ class FsItem:
 
     @staticmethod
     def get_name(path):
-        head, tail = ntpath.split(path)
-        return tail or ntpath.basename(head)
+        head, tail = os.path.split(path)
+        return tail or os.path.basename(head)
 
     @staticmethod
     def get_parent_dir(path):
-        head, tail = ntpath.split(path)
+        head, tail = os.path.split(path)
         if tail:
             return head
         else:
-            head, tail = ntpath.split(head)
+            head, tail = os.path.split(head)
             return head
 
     def __str__(self):
