@@ -194,6 +194,25 @@ def get_free_memory():
     return Size(int(mem_line[index]))
 
 
+def get_mem_available():
+    """Returns amount of available memory from /proc/meminfo"""
+    cmd = "cat /proc/meminfo | grep MemAvailable | awk '{ print $2 }'"
+    mem_available = TestRun.executor.run(cmd).stdout
+
+    return Size(int(mem_available))
+
+
+def get_metadata_size(module_name):
+    """Returns allocated size of specific module's metadata from /proc/vmallocinfo"""
+    cmd = f"cat /proc/vmallocinfo | grep {module_name} | awk '{{ print $2 }}' "
+    output_lines = TestRun.executor.run(cmd).stdout.splitlines()
+    memory_used = 0
+    for line in output_lines:
+        memory_used += int(line)
+
+    return Size(memory_used)
+
+
 def allocate_memory(size: Size):
     """Allocates given amount of memory"""
     mount_ramfs()
