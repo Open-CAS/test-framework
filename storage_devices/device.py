@@ -80,6 +80,12 @@ class Device:
         self.set_sysfs_property("max_sectors_kb",
                                 int(new_max_io_size.get_value(Unit.KibiByte)))
 
+    def get_max_io_size(self):
+        return Size(int(self.get_sysfs_property("max_sectors_kb")), Unit.KibiByte)
+
+    def get_max_hw_io_size(self):
+        return Size(int(self.get_sysfs_property("max_hw_sectors_kb")), Unit.KibiByte)
+
     def get_discard_granularity(self):
         return self.get_sysfs_property("discard_granularity")
 
