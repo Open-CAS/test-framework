@@ -333,7 +333,13 @@ def _is_by_id_path(path: str):
 
 def _is_dev_path_whitelisted(path: str):
     """check if given path is whitelisted"""
-    return re.search(r"cas\d+-\d+", path) is not None
+    whitelisted_paths = [r"cas\d+-\d+", r"/dev/dm-\d+"]
+
+    for whitelisted_path in whitelisted_paths:
+        if re.search(whitelisted_path, path) is not None:
+            return True
+        else:
+            return False
 
 
 def _is_dev_path_blacklisted(path: str):
