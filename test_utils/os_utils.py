@@ -13,8 +13,11 @@ from packaging import version
 from core.test_run import TestRun
 from storage_devices.device import Device
 from test_tools.dd import Dd
+from test_tools.fs_utils import (
+    check_if_directory_exists, FileType, find, create_directory, ls, parse_ls_output, read_file,
+    check_if_file_exists
+)
 from test_tools.disk_utils import get_sysfs_path
-from test_tools.fs_utils import check_if_directory_exists, create_directory, check_if_file_exists
 from test_utils.filesystem.file import File
 from test_utils.output import CmdException
 from test_utils.size import Size, Unit
@@ -251,9 +254,13 @@ def download_file(url, destination_dir="/tmp"):
 
 
 def get_kernel_version():
-    version_string = TestRun.executor.run_expect_success("uname -r").stdout
-    version_string = version_string.split('-')[0]
+    version_string = get_current_kernel_version_str().split('-')[0]
     return version.Version(version_string)
+
+
+def get_current_kernel_version_str():
+    """Return current kernel version"""
+    return TestRun.executor.run_expect_success("uname -r").stdout
 
 
 class ModuleRemoveMethod(Enum):
@@ -413,3 +420,196 @@ def get_wbt_lat(device: Device):
     )
 
     return int(TestRun.executor.run_expect_success(f"cat {wbt_lat_config_path}").stdout)
+
+
+def got_compatible_kernels():
+    """Check if there are any compatible kernel versions on the DUT"""
+    kernels_number = 0
+    try:
+        kernels_number = _count_kernel_versions(compatible=True)
+    except Exception as e:
+        raise Exception("Cannot check if there are compatible kernels on DUT\n"
+                        f"{e}")
+    finally:
+        return kernels_number > 1
+
+
+def got_incompatible_kernels():
+    """Check if there are any incompatible kernel versions on the DUT"""
+    kernels_number = 0
+    try:
+        kernels_number = _count_kernel_versions(compatible=False)
+    except Exception as e:
+        raise Exception("Cannot check if there are incompatible kernels on DUT\n"
+                        f"{e}")
+    finally:
+        return kernels_number > 0
+
+
+def _count_kernel_versions(compatible: bool):
+    """Count how many compatible/incompatible kernel versions are on the DUT"""
+    count = 0
+    kernel_ver = str(get_kernel_version())
+    kernels_list = _get_kernels_entries()
+
+    for kernel in kernels_list:
+        if ("rescue" or "recovery") in kernel.lower():
+            continue
+        if compatible:
+            if kernel_ver in kernel:
+                count += 1
+        else:
+            if kernel_ver not in kernel:
+                count += 1
+
+    return count
+
+
+def _get_kernels_entries():
+    """
+        Collect and print entries of all kernel versions available on the DUT
+        Entries from BLS are collected first during boot, then entries from GRUB config are
+        collected. Other entries (non-linux) are of no interest to us.
+    """
+    entries = []
+
+    entries.extend(_get_entries_from_bls())
+    entries.extend(_get_entries_from_grub_config(start_number=len(entries)))
+
+    if not entries:
+        raise CmdException("Error while listing available kernel versions.")
+
+    TestRun.LOGGER.info(f"Entries in system:")
+    for entry in entries:
+        TestRun.LOGGER.info(f"{entry}")
+    return entries
+
+
+def _get_entries_from_bls(boot_dir: str = '/boot'):
+    """Collect entries of kernel versions from Boot Loader Specification directory"""
+    entries = []
+    bls_entries_paths = find([boot_dir], 'loader/entries', [FileType.directory])
+    for path in bls_entries_paths:
+        output = parse_ls_output(ls(path), path)
+        if output is not None:
+            files = [file.full_path for file in output]
+            for i, file in enumerate(files):
+                file_content = read_file(file)
+                for line in file_content.splitlines():
+                    if 'title' in line.lower():
+                        entries.append(f"{i} {line.replace('title ', '')}")
+
+    return entries
+
+
+def _get_entries_from_grub_config(boot_dir: str = '/boot', start_number: int = 0):
+    """Collect entries of kernel versions from GRUB config"""
+    entries = []
+    grub_config_paths = find([boot_dir], 'grub.cfg')
+
+    grub_config_path = _get_right_grub_config_path(grub_config_paths)
+
+    cmd = f'grep "menuentry " {grub_config_path} | cut -f 2 -d "\'" | nl -v {start_number}'
+    grub_config_entries = TestRun.executor.run(cmd).stdout.splitlines()
+    entries.extend(grub_config_entries)
+
+    return entries
+
+
+def _get_right_grub_config_path(grub_config_paths: [str]):
+    """
+        Select correct path to GRUB config
+        Firstly check for a config for UEFI system partition
+        Secondly check for a config for BIOS boot partition
+    """
+    import re
+    efi = re.compile(r'/efi[\S\s]*/grub.cfg')
+    legacy = re.compile(r'/grub(2)?/grub.cfg')
+    grub_config_path = None
+
+    for path in grub_config_paths:
+        if efi.search(path):
+            grub_config_path = path
+            break
+
+    if not grub_config_path:
+        for path in grub_config_paths:
+            if legacy.search(path):
+                grub_config_path = path
+                break
+
+    return grub_config_path
+
+
+def switch_kernel(compatible: bool = True, custom: str = None):
+    """Switch kernel to compatible/incompatible/directly chosen version on the next boot"""
+    available_kernels = _get_kernels_entries()
+    grub_entry_number = choose_kernel_version(compatible, available_kernels, custom)
+    _set_kernel_for_next_reboot_only(grub_entry_number)
+
+
+def choose_kernel_version(compatible: bool, available_kernels: [str], custom: str = None):
+    """
+        Choose one compatible/incompatible/custom kernel version from given list
+        and return its entry position or raise exception if not found any
+    """
+    current_version = get_current_kernel_version_str()
+    current_version_main = str(get_kernel_version())
+    kernel_position_in_grub_config = None
+
+    if custom and available_kernels:
+        for kernel in available_kernels:
+            kernel = kernel.split('--')[0]
+
+            if custom in kernel:
+                kernel_position_in_grub_config = int(kernel.split()[0])
+                return kernel_position_in_grub_config
+
+    elif available_kernels and current_version:
+        if compatible:
+            compatible_versions = _get_kernels(True, available_kernels, current_version_main)
+
+            for kernel in compatible_versions:
+                if current_version not in kernel:
+                    kernel_position_in_grub_config = int(kernel.split()[0])
+                    break
+        else:
+            incompatible_versions = _get_kernels(False, available_kernels, current_version_main)
+            kernel_position_in_grub_config = int(incompatible_versions[0].split()[0])
+
+    if kernel_position_in_grub_config is None:
+        raise Exception("Didn't found any suitable record in grub config.")
+    else:
+        return kernel_position_in_grub_config
+
+
+def _get_kernels(compatible: bool, kernel_versions: [str], main_version: str):
+    """Choose compatible/incompatible kernel versions from given list and return them"""
+    kernels = []
+
+    for kernel_version in kernel_versions:
+        if ("rescue" or "recovery") in kernel_version.lower():
+            continue
+
+        if compatible:
+            if main_version in kernel_version:
+                kernels.append(kernel_version)
+        else:
+            if main_version not in kernel_version:
+                kernels.append(kernel_version)
+
+    return kernels
+
+
+def _set_kernel_for_next_reboot_only(grub_entry_number: int):
+    """
+        Set given GRUB entry number to be booted to only during the next boot
+        Check grub2-reboot (grub-reboot) help for details
+    """
+    grub_version = _get_grub_version()
+    TestRun.executor.run(f"{grub_version}-reboot {grub_entry_number}")
+
+
+def _get_grub_version():
+    """Return GRUB version"""
+    return TestRun.executor.run("ls /boot | grep grub").stdout.splitlines()[-1]

@@ -6,7 +6,7 @@
 
 import base64
 import math
-import re
+import os
 import textwrap
 from datetime import datetime
 
@@ -47,6 +47,17 @@ class PermissionSign(Enum):
     add = '+'
     remove = '-'
     set = '='
+
+
+class FileType(Enum):
+    block = 'b'
+    character = 'c'
+    directory = 'd'
+    named_pipe = 'p'
+    regular_file = 'f'
+    symbolic_link = 'l'
+    socket = 's'
+    door = 'D'
 
 
 def create_directory(path, parents: bool = False):
@@ -303,3 +314,14 @@ def create_random_test_file(target_file_path: str,
     dd.run()
     file.refresh_item()
     return file
+
+
+def find(search_roots: [str],
+         filename_phrase: str,
+         search_types: [FileType] = [FileType.regular_file]):
+    cmd = f'find {" ".join(os.path.abspath(root) for root in search_roots)} '
+    cmd += f'-wholename {os.path.join("*", filename_phrase)} '
+    cmd += rf'\( -type {" -o -type ".join([ftype.value for ftype in search_types])} \)'
+    output = TestRun.executor.run(cmd).stdout.split()
+    found_items_list = [line for line in output if 'Permission denied' not in line]
+    return found_items_list
