@@ -5,11 +5,11 @@
 
 from enum import Enum
 
+from test_utils.disk_finder import resolve_to_by_id_link
 from test_utils.linux_command import LinuxCommand
 from test_utils.size import Size, Unit
 from storage_devices.device import Device
 from core.test_run import TestRun
-from test_utils.output import Output
 
 
 class DmTarget(Enum):
@@ -257,6 +257,7 @@ class ErrorDevice(Device):
         self.device = base_device
         self.mapper = DeviceMapper(name)
         self.name = name
+        self.path = resolve_to_by_id_link(self.mapper.get_path().replace('/dev/', ''))
         self.table = DmTable.passthrough_table(base_device) if not table else table
         self.active = False
         self.start()
