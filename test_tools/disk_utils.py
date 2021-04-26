@@ -91,12 +91,16 @@ def create_partition(
     if part_type == PartitionType.logical:
         begin += Size(1, Unit.MebiByte if not aligned else device.block_size)
 
-    end = (begin + part_size) if part_size != Size.zero() else '100%'
+    if part_size != Size.zero():
+        end = (begin + part_size)
+        end_cmd = f'{end.get_value(unit)}{unit_to_string(unit)}'
+    else:
+        end_cmd = '100%'
 
     cmd = f'parted --script {device.path} mkpart ' \
           f'{part_type.name} ' \
           f'{begin.get_value(unit)}{unit_to_string(unit)} ' \
-          f'{end.get_value(unit)}{unit_to_string(unit)}'
+          f'{end_cmd}'
     output = TestRun.executor.run(cmd)
 
     if output.exit_code != 0:
