@@ -152,10 +152,10 @@ def drop_caches(level: DropCachesMode = DropCachesMode.PAGECACHE):
 def disable_memory_affecting_functions():
     """Disables system functions affecting memory"""
     # Don't allow sshd to be killed in case of out-of-memory:
-    TestRun.executor.run_expect_success(
+    TestRun.executor.run(
         "echo '-1000' > /proc/`cat /var/run/sshd.pid`/oom_score_adj"
     )
-    TestRun.executor.run_expect_success(
+    TestRun.executor.run(
         "echo -17 > /proc/`cat /var/run/sshd.pid`/oom_adj"
     )  # deprecated
     TestRun.executor.run_expect_success(
