@@ -48,7 +48,7 @@ class Fio:
         )
 
     def calculate_timeout(self):
-        if self.global_cmd_parameters.get_parameter_value("time_based") is None:
+        if "time_based" not in self.global_cmd_parameters.command_flags:
             return self.default_run_time
 
         total_time = self.global_cmd_parameters.get_parameter_value("runtime")
