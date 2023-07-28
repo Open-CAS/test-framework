@@ -39,7 +39,7 @@ def get_block_devices_list():
     block_devices = []
 
     for dev in devices:
-        if ('sd' in dev or 'nvme' in dev) and dev not in os_disks:
+        if any([prefix in dev for prefix in ["sd", "nvme", "vd"]]) and dev not in os_disks:
             block_devices.append(dev)
 
     return block_devices
