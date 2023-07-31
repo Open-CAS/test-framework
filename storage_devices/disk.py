@@ -235,3 +235,37 @@ class SataDisk(Disk):
         self.plug_command = f"echo '{port_id} {target_id} {lun}' > " \
             f"{host_path}/host{controller_id}/scsi_host/host{controller_id}/scan"
         return sysfs_addr
+
+
+class VirtioDisk(Disk):
+    plug_all_command = "echo 1 > /sys/bus/pci/rescan"
+
+    def __init__(self, path, disk_type, serial_number, block_size):
+        Disk.__init__(self, path, disk_type, serial_number, block_size)
+        self.plug_command = VirtioDisk.plug_all_command
+        self.unplug_command = \
+            f"echo 1 > {self.get_unplug_path()}"
+
+    def get_unplug_path(self):
+        device_id = self.get_device_id()
+
+        ls_command = f"$(find -H /sys/devices/ -name {device_id} -type d)"
+        output = fs_utils.ls_item(f"{ls_command}")
+        sysfs_addr = fs_utils.parse_ls_output(output)[0]
+        if not sysfs_addr:
+            raise Exception(f"Failed to find sysfs address: ls -l {ls_command}")
+
+        dirs = sysfs_addr.full_path.split("/")
+
+        for i, path_component in enumerate(dirs[::-1]):
+            # Search for scsi address in sysfs path
+            matches = re.search(
+                r"^\d+:\d+:\d+.\d+$",
+                path_component)
+            if matches:
+                break
+        else:
+            raise Exception(f"Failed to find controller for {device_id}")
+
+        return "/".join(dirs[:-i]) + "/remove"
+
