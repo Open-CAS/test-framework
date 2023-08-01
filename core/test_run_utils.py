@@ -171,6 +171,7 @@ def __setup(cls):
     except Exception as ex:
         raise Exception(f"Failed to setup DUT instance:\n"
                         f"{str(ex)}\n{traceback.format_exc()}")
+    cls.dut.ip = cls.dut.ip or cls.executor.resolve_ip_address()
     cls.__setup_disks()
 
     TestRun.LOGGER.info(f"Re-seeding random number generator with seed: {cls.random_seed}")

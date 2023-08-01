@@ -35,6 +35,9 @@ class BaseExecutor:
     def wait_for_connection(self, timeout: timedelta = None):
         pass
 
+    def resolve_ip_address(self):
+        return "127.0.0.1"
+
     def run(self, command, timeout: timedelta = timedelta(minutes=30)):
         if TestRun.dut and TestRun.dut.env:
             command = f"{TestRun.dut.env} && {command}"

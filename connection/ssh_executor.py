@@ -2,13 +2,14 @@
 # Copyright(c) 2019-2021 Intel Corporation
 # SPDX-License-Identifier: BSD-3-Clause
 #
-
+import os
+import re
 import socket
 import subprocess
-import paramiko
-import os
-
 from datetime import timedelta, datetime
+
+import paramiko
+
 from connection.base_executor import BaseExecutor
 from core.test_run import TestRun, Blocked
 from test_utils.output import Output
@@ -177,3 +178,42 @@ class SshExecutor(BaseExecutor):
                 except Exception:
                     return
             raise ConnectionError("Timeout occurred before ssh connection loss")
+
+    def resolve_ip_address(self):
+        user, hostname, port = self.user, self.host, self.port
+        key_file = None
+        pattern = br"^Authenticated to.+\[(\d+\.\d+\.\d+\.\d+)].*$"
+        param, command = " -v", "''"
+        try:
+            if self.ssh_config:
+                host = self.ssh_config.lookup(self.host)
+                if re.fullmatch(r"^\d+\.\d+\.\d+\.\d+$", host['hostname']):
+                    return host['hostname']
+
+                if host.get('proxyjump', None) is not None:
+                    proxy = self.ssh_config.lookup(host['proxyjump'])
+
+                    user = proxy.get('user', user)
+                    hostname = proxy['hostname']
+                    port = proxy.get('port', port)
+                    key_file = proxy.get('identityfile', key_file)
+                    command = f"nslookup {host['hostname']}"
+                    pattern = br"^Address:\s+(\d+\.\d+\.\d+\.\d+)\s*$"
+                    param = ""
+                else:
+                    user = host.get('user', user)
+                    port = host.get('port', port)
+                    key_file = host.get('identityfile', key_file)
+            user_str = f"{user}@"
+            identity_str = f" -i {os.path.abspath(key_file[0])}" if key_file else ""
+
+            completed_process = subprocess.run(
+                f"ssh{identity_str} -p {port}{param} {user_str}{hostname} {command}",
+                shell=True,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                timeout=30)
+            matches = re.findall(pattern, completed_process.stdout + completed_process.stderr, re.MULTILINE)
+            return matches[-1].decode('utf-8')
+        except:
+            return None
