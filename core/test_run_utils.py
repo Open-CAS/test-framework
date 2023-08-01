@@ -133,19 +133,20 @@ def __presetup(cls):
     if cls.config['type'] == 'ssh':
         try:
             IP(cls.config['ip'])
+            cls.config['host'] = cls.config['ip']
         except ValueError:
             TestRun.block("IP address from config is in invalid format.")
+        except KeyError:
+            if 'host' not in cls.config:
+                TestRun.block("No IP address or host defined in config")
 
         port = cls.config.get('port', 22)
 
-        if 'user' in cls.config:
-            cls.executor = SshExecutor(
-                cls.config['ip'],
-                cls.config['user'],
-                port
-            )
-        else:
-            TestRun.block("There is no user given in config.")
+        cls.executor = SshExecutor(
+            cls.config['host'],
+            cls.config.get('user', None),
+            port
+        )
     elif cls.config['type'] == 'local':
         cls.executor = LocalExecutor()
     else:
