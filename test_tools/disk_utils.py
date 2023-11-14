@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
+# Copyright(c) 2023 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -375,7 +376,13 @@ def _is_by_id_path(path: str):
 
 def _is_dev_path_whitelisted(path: str):
     """check if given path is whitelisted"""
-    whitelisted_paths = [r"cas\d+-\d+", r"/dev/dm-\d+"]
+    whitelisted_paths = [
+        r"/dev/ram\d+",
+        r"/nullb\d+",
+        r"/dev/drbd\d+",
+        r"cas\d+-\d+",
+        r"/dev/dm-\d+"
+    ]
 
     for whitelisted_path in whitelisted_paths:
         if re.search(whitelisted_path, path) is not None:

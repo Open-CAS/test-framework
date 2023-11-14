@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
+# Copyright(c) 2023 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -9,6 +10,7 @@ from test_tools.fs_utils import (
     create_directory,
     check_if_symlink_exists,
     check_if_directory_exists,
+    check_if_special_block_exist
 )
 from test_utils.filesystem.file import File
 
@@ -75,6 +77,11 @@ class Symlink(File):
                 raise FileExistsError("Existing symlink points to a different target.")
         elif not create:
             raise FileNotFoundError("Requested symlink does not exist.")
+
+        is_special_block = check_if_special_block_exist(link_path)
+        if is_special_block:
+            if not target or readlink(link_path) == readlink(target):
+                return cls(link_path)
 
         is_dir = check_if_directory_exists(link_path)
         if is_dir:
