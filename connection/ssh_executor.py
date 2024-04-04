@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 import os
@@ -118,6 +119,7 @@ class SshExecutor(BaseExecutor):
                 f'-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no" '
                 + src_to_dst + f'{" ".join(options)}',
                 shell=True,
+                executable="/bin/bash",
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 timeout=timeout.total_seconds())
@@ -210,6 +212,7 @@ class SshExecutor(BaseExecutor):
             completed_process = subprocess.run(
                 f"ssh{identity_str} -p {port}{param} {user_str}{hostname} {command}",
                 shell=True,
+                executable="/bin/bash",
                 stdout=subprocess.PIPE,
                 stderr=subprocess.PIPE,
                 timeout=30)

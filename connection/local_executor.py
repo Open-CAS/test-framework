@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -15,6 +16,7 @@ class LocalExecutor(BaseExecutor):
         completed_process = subprocess.run(
             command,
             shell=True,
+            executable="/bin/bash",
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=timeout.total_seconds())
@@ -40,6 +42,7 @@ class LocalExecutor(BaseExecutor):
         completed_process = subprocess.run(
             f'rsync -r {src} {dst} {" ".join(options)}',
             shell=True,
+            executable="/bin/bash",
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=timeout.total_seconds())
