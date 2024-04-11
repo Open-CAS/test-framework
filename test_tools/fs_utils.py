@@ -1,6 +1,6 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
-# Copyright(c) 2023 Huawei Technologies Co., Ltd.
+# Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -116,7 +116,7 @@ def copy(source: str,
     cmd = f"cp{' --force' if force else ''}" \
           f"{' --recursive' if recursive else ''}" \
           f"{' --dereference' if dereference else ''} " \
-          f"\"{source}\" \"{destination}\""
+          f"{source} {destination}"
     return TestRun.executor.run_expect_success(cmd)
 
 

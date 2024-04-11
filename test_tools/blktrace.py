@@ -1,8 +1,11 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
+# Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
+
 import math
+import time
 
 from aenum import IntFlag, Enum
 
@@ -133,6 +136,10 @@ class BlkTrace:
         drop_caches(DropCachesMode.ALL)
 
         TestRun.executor.run_expect_success(f"kill -s SIGINT {self.blktrace_pid}")
+
+        time.sleep(3)
+        if TestRun.executor.check_if_process_exists(self.blktrace_pid):
+            TestRun.fail("blktrace monitoring for device is still active")
         self.blktrace_pid = -1
 
         # dummy command for swallowing output of killed command
