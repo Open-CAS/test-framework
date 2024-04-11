@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2020-2021 Intel Corporation
+# Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -39,9 +40,9 @@ class Vdbench:
 
         fs_utils.create_directory(self.working_dir)
         TestRun.LOGGER.info("Copying vdbench to working dir.")
-        fs_utils.copy(posixpath.join(self.source_dir, "*"), self.working_dir,
-                      True, True)
-        pass
+        fs_utils.copy(
+            source=self.source_dir, destination=self.working_dir, force=True, recursive=True
+        )
 
     def teardown(self):
         pass

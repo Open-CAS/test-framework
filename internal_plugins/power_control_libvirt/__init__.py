@@ -1,31 +1,42 @@
 #
 # Copyright(c) 2020-2021 Intel Corporation
+# Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
+
 from datetime import timedelta
 
 from connection.local_executor import LocalExecutor
 from connection.ssh_executor import SshExecutor
 from core.test_run import TestRun
 
+DEFAULT_REBOOT_TIMEOUT = 60
+
 
 class PowerControlPlugin:
     def __init__(self, params, config):
         print("Power Control LibVirt Plugin initialization")
         try:
-            self.ip = config['ip']
-            self.user = config['user']
-        except Exception:
-            raise Exception("Missing fields in config! ('ip' and 'user' required)")
+            self.host = config["host"]
+            self.user = config["user"]
+            self.connection_type = config["connection_type"]
+            self.port = config.get("port", 22)
+
+        except AttributeError:
+            raise (
+                "Missing fields in config! ('host','user','connection_type','vm_name' "
+                "are required fields)"
+            )
 
     def pre_setup(self):
         print("Power Control LibVirt Plugin pre setup")
-        if self.config['connection_type'] == 'ssh':
+        if self.connection_type == "ssh":
             self.executor = SshExecutor(
-                self.ip,
+                self.host,
                 self.user,
-                self.config.get('port', 22)
+                self.port,
             )
+            self.executor.connect()
         else:
             self.executor = LocalExecutor()
 
@@ -36,13 +47,21 @@ class PowerControlPlugin:
         pass
 
     def power_cycle(self):
-        self.executor.run(f"virsh reset {self.config['domain']}")
-        TestRun.executor.wait_for_connection_loss()
-        timeout = TestRun.config.get('reboot_timeout')
-        if timeout:
-            TestRun.executor.wait_for_connection(timedelta(seconds=int(timeout)))
-        else:
-            TestRun.executor.wait_for_connection()
+        self.executor.run_expect_success(f"sudo virsh reset {TestRun.dut.virsh['vm_name']}")
+        TestRun.executor.disconnect()
+        TestRun.executor.wait_for_connection(timedelta(seconds=TestRun.dut.virsh["reboot_timeout"]))
+
+    def check_if_vm_exists(self, vm_name) -> bool:
+        return self.executor.run(f"sudo virsh list|grep -w {vm_name}").exit_code == 0
+
+    def parse_virsh_config(self, vm_name, reboot_timeout=DEFAULT_REBOOT_TIMEOUT) -> dict | None:
+        if not self.check_if_vm_exists(vm_name=vm_name):
+            raise ValueError(f"Virsh power plugin error: couldn't find VM {vm_name} on host "
+                             f"{self.host}")
+        return {
+            "vm_name": vm_name,
+            "reboot_timeout": reboot_timeout,
+        }
 
 
 plugin_class = PowerControlPlugin

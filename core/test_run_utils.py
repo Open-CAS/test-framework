@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
+# Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -127,8 +128,6 @@ TestRun.__setup_disks = __setup_disks
 
 @classmethod
 def __presetup(cls):
-    cls.plugin_manager = PluginManager(cls.item, cls.config)
-    cls.plugin_manager.hook_pre_setup()
 
     if cls.config['type'] == 'ssh':
         try:
@@ -151,6 +150,8 @@ def __presetup(cls):
         cls.executor = LocalExecutor()
     else:
         TestRun.block("Execution type (local/ssh) is missing in DUT config!")
+    cls.plugin_manager = PluginManager(cls.item, cls.config)
+    cls.plugin_manager.hook_pre_setup()
 
 
 TestRun.presetup = __presetup
