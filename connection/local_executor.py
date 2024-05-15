@@ -19,14 +19,24 @@ class LocalExecutor(BaseExecutor):
             executable="/bin/bash",
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            timeout=timeout.total_seconds())
+            timeout=timeout.total_seconds(),
+        )
 
-        return Output(completed_process.stdout,
-                      completed_process.stderr,
-                      completed_process.returncode)
+        return Output(
+            completed_process.stdout, completed_process.stderr, completed_process.returncode
+        )
 
-    def _rsync(self, src, dst, delete=False, symlinks=False, checksum=False, exclude_list=[],
-               timeout: timedelta = timedelta(seconds=90), dut_to_controller=False):
+    def _rsync(
+        self,
+        src,
+        dst,
+        delete=False,
+        symlinks=False,
+        checksum=False,
+        exclude_list=[],
+        timeout: timedelta = timedelta(seconds=90),
+        dut_to_controller=False,
+    ):
         options = []
 
         if delete:
@@ -45,7 +55,8 @@ class LocalExecutor(BaseExecutor):
             executable="/bin/bash",
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
-            timeout=timeout.total_seconds())
+            timeout=timeout.total_seconds(),
+        )
 
         if completed_process.returncode:
             raise Exception(f"rsync failed:\n{completed_process}")
