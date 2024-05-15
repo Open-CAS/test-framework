@@ -8,15 +8,18 @@ import subprocess
 from datetime import timedelta
 
 from connection.base_executor import BaseExecutor
+from core.test_run import TestRun
 from test_utils.output import Output
 
 
 class LocalExecutor(BaseExecutor):
     def _execute(self, command, timeout):
+        bash_path = TestRun.config.get("bash_path", "/bin/bash")
+
         completed_process = subprocess.run(
             command,
             shell=True,
-            executable="/bin/bash",
+            executable=bash_path,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=timeout.total_seconds(),
@@ -38,6 +41,7 @@ class LocalExecutor(BaseExecutor):
         dut_to_controller=False,
     ):
         options = []
+        bash_path = TestRun.config.get("bash_path", "/bin/bash")
 
         if delete:
             options.append("--delete")
@@ -52,7 +56,7 @@ class LocalExecutor(BaseExecutor):
         completed_process = subprocess.run(
             f'rsync -r {src} {dst} {" ".join(options)}',
             shell=True,
-            executable="/bin/bash",
+            executable=bash_path,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=timeout.total_seconds(),
