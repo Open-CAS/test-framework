@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
+# Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -63,7 +64,7 @@ class BaseExecutor:
 
     def check_if_process_exists(self, pid: int):
         output = self.run(f"ps aux | awk '{{print $2 }}' | grep ^{pid}$", timedelta(seconds=10))
-        return True if output.exit_code == 0 else False
+        return output.exit_code == 0
 
     def kill_process(self, pid: int):
         # TERM signal should be used in preference to the KILL signal, since a
