@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2020-2021 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -30,6 +31,7 @@ from itertools import product, combinations
 import random
 
 from core.test_run import TestRun
+
 
 def testcase_id(param_set):
     if len(param_set.values) == 1:
@@ -77,7 +79,6 @@ def register_testcases(metafunc, argnames, argvals):
     """
     from _pytest.python import CallSpec2, _find_parametrized_scope
     from _pytest.mark import ParameterSet
-    from _pytest.fixtures import scope2index
 
     parameter_sets = [ParameterSet(values=val, marks=[], id=None) for val in argvals]
     metafunc._validate_if_using_arg_names(argnames, False)
@@ -86,21 +87,20 @@ def register_testcases(metafunc, argnames, argvals):
 
     ids = [testcase_id(param_set) for param_set in parameter_sets]
 
-    scope = _find_parametrized_scope(argnames, metafunc._arg2fixturedefs, False)
-    scopenum = scope2index(scope, descr=f"parametrizex() call in {metafunc.function.__name__}")
+    scope_ = _find_parametrized_scope(argnames=argnames, arg2fixturedefs=metafunc._arg2fixturedefs,
+                                      indirect=False)
 
     calls = []
-    for callspec in metafunc._calls or [CallSpec2(metafunc)]:
+    for callspec in metafunc._calls or [CallSpec2()]:
         for param_index, (param_id, param_set) in enumerate(zip(ids, parameter_sets)):
-            newcallspec = callspec.copy()
-            newcallspec.setmulti2(
-                arg_value_types,
-                argnames,
-                param_set.values,
-                param_id,
-                param_set.marks,
-                scopenum,
-                param_index,
+            newcallspec = callspec.setmulti(
+                valtypes=arg_value_types,
+                argnames=argnames,
+                valset=param_set.values,
+                id=str(param_id),
+                marks=param_set.marks,
+                scope=scope_,
+                param_index=param_index,
             )
             calls.append(newcallspec)
 

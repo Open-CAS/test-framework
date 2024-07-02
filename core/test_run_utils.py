@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
+# Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -127,29 +128,30 @@ TestRun.__setup_disks = __setup_disks
 
 @classmethod
 def __presetup(cls):
-    cls.plugin_manager = PluginManager(cls.item, cls.config)
-    cls.plugin_manager.hook_pre_setup()
 
     if cls.config['type'] == 'ssh':
         try:
             IP(cls.config['ip'])
+            cls.config['host'] = cls.config['ip']
         except ValueError:
             TestRun.block("IP address from config is in invalid format.")
+        except KeyError:
+            if 'host' not in cls.config:
+                TestRun.block("No IP address or host defined in config")
 
         port = cls.config.get('port', 22)
 
-        if 'user' in cls.config:
-            cls.executor = SshExecutor(
-                cls.config['ip'],
-                cls.config['user'],
-                port
-            )
-        else:
-            TestRun.block("There is no user given in config.")
+        cls.executor = SshExecutor(
+            cls.config['host'],
+            cls.config.get('user', None),
+            port
+        )
     elif cls.config['type'] == 'local':
         cls.executor = LocalExecutor()
     else:
         TestRun.block("Execution type (local/ssh) is missing in DUT config!")
+    cls.plugin_manager = PluginManager(cls.item, cls.config)
+    cls.plugin_manager.hook_pre_setup()
 
 
 TestRun.presetup = __presetup
@@ -170,6 +172,7 @@ def __setup(cls):
     except Exception as ex:
         raise Exception(f"Failed to setup DUT instance:\n"
                         f"{str(ex)}\n{traceback.format_exc()}")
+    cls.dut.ip = cls.dut.ip or cls.executor.resolve_ip_address()
     cls.__setup_disks()
 
     TestRun.LOGGER.info(f"Re-seeding random number generator with seed: {cls.random_seed}")

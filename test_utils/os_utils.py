@@ -199,7 +199,7 @@ def defaultize_memory_affecting_functions():
     TestRun.executor.run_expect_success("swapon --all")
 
 
-def get_free_memory():
+def get_mem_free():
     """Returns free amount of memory in bytes"""
     output = TestRun.executor.run_expect_success("free -b")
     output = output.stdout.splitlines()

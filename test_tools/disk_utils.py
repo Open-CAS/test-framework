@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
+# Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -340,9 +341,13 @@ def wipe_filesystem(device, force=True):
 def check_if_device_supports_trim(device):
     if device.get_device_id().startswith("nvme"):
         return True
+    command_output = TestRun.executor.run(f'hdparm -I {device.path} | grep "TRIM supported"')
+    if command_output.exit_code == 0:
+        return True
     command_output = TestRun.executor.run(
-        f'hdparm -I {device.path} | grep "TRIM supported"')
-    return command_output.exit_code == 0
+        f"lsblk -dn {device.path} -o DISC-MAX | grep -o \'[0-9]\\+\'"
+    )
+    return int(command_output.stdout) > 0
 
 
 def get_device_filesystem_type(device_id):
@@ -375,7 +380,13 @@ def _is_by_id_path(path: str):
 
 def _is_dev_path_whitelisted(path: str):
     """check if given path is whitelisted"""
-    whitelisted_paths = [r"cas\d+-\d+", r"/dev/dm-\d+"]
+    whitelisted_paths = [
+        r"/dev/ram\d+",
+        r"/nullb\d+",
+        r"/dev/drbd\d+",
+        r"cas\d+-\d+",
+        r"/dev/dm-\d+"
+    ]
 
     for whitelisted_path in whitelisted_paths:
         if re.search(whitelisted_path, path) is not None:

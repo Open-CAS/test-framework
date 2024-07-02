@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
+# Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -99,6 +100,10 @@ def check_if_regular_file_exists(path):
     return TestRun.executor.run(f"test -f \"{path}\"").exit_code == 0
 
 
+def check_if_special_block_exist(path):
+    return TestRun.executor.run(f"test -b \"{path}\"").exit_code == 0
+
+
 def check_if_symlink_exists(path):
     return TestRun.executor.run(f"test -L \"{path}\"").exit_code == 0
 
@@ -111,7 +116,7 @@ def copy(source: str,
     cmd = f"cp{' --force' if force else ''}" \
           f"{' --recursive' if recursive else ''}" \
           f"{' --dereference' if dereference else ''} " \
-          f"\"{source}\" \"{destination}\""
+          f"{source} {destination}"
     return TestRun.executor.run_expect_success(cmd)
 
 
@@ -266,7 +271,7 @@ def uncompress_archive(file, destination=None):
 def ls(path, options=''):
     default_options = "-lA --time-style=+'%Y-%m-%d %H:%M:%S'"
     output = TestRun.executor.run(
-        f"ls {default_options} {options} \"{path}\"")
+        f"ls {default_options} {options} {path}")
     return output.stdout
 
 
@@ -308,7 +313,6 @@ def parse_ls_output(ls_output, dir_path=''):
         from test_utils.filesystem.file import File, FsItem
         from test_utils.filesystem.directory import Directory
         from test_utils.filesystem.symlink import Symlink
-
         if file_type == '-':
             fs_item = File(full_path)
         elif file_type == 'd':

@@ -173,10 +173,18 @@ class Disk(Device):
                     disk_type: DiskType,
                     serial_number,
                     block_size):
-        if disk_type is DiskType.nand or disk_type is DiskType.optane:
-            return NvmeDisk(path, disk_type, serial_number, block_size)
-        else:
-            return SataDisk(path, disk_type, serial_number, block_size)
+
+        resolved_disk_type = None
+        for resolved_disk_type in [NvmeDisk, SataDisk, VirtioDisk]:
+            try:
+                resolved_disk_type.get_unplug_path()
+            except:
+                continue
+
+        if resolved_disk_type is None:
+            raise Exception(f"Unrecognized device type for {path}")
+
+        return resolved_disk_type(path, disk_type, serial_number, block_size)
 
 
 class NvmeDisk(Disk):
@@ -204,6 +212,20 @@ class NvmeDisk(Disk):
     def get_lba_format_in_use(self):
         return nvme_cli.get_lba_format_in_use(self)
 
+    @classmethod
+    def get_unplug_path(cls, device_id):
+        base = f"/sys/block/{device_id}/device"
+        for suffix in ["/remove", "/device/remove"]:
+            try:
+                output = fs_utils.ls_item(base + suffix)
+                fs_utils.parse_ls_output(output)[0]
+            except:
+                continue
+
+            return base + suffix
+
+        raise Exception(f"Couldn't create unplug path for {device_id}")
+
 
 class SataDisk(Disk):
     plug_all_command = "for i in $(find -H /sys/devices/ -path '*/scsi_host/*/scan' -type f); " \
@@ -213,9 +235,10 @@ class SataDisk(Disk):
         Disk.__init__(self, path, disk_type, serial_number, block_size)
         self.plug_command = SataDisk.plug_all_command
         self.unplug_command = \
-            f"echo 1 > {self.get_sysfs_properties(self.get_device_id()).full_path}/device/delete"
+            f"echo 1 > {self.get_unplug_path(self.get_device_id())}"
 
-    def get_sysfs_properties(self, device_id):
+    @classmethod
+    def get_unplug_path(cls, device_id):
         ls_command = f"$(find -H /sys/devices/ -name {device_id} -type d)"
         output = fs_utils.ls_item(f"{ls_command}")
         sysfs_addr = fs_utils.parse_ls_output(output)[0]
@@ -223,15 +246,44 @@ class SataDisk(Disk):
             raise Exception(f"Failed to find sysfs address: ls -l {ls_command}")
         dirs = sysfs_addr.full_path.split('/')
         scsi_address = dirs[-3]
-        matches = re.search(
-            r"^(?P<controller>\d+)[-:](?P<port>\d+)[-:](?P<target>\d+)[-:](?P<lun>\d+)$",
-            scsi_address)
-        controller_id = matches["controller"]
-        port_id = matches["port"]
-        target_id = matches["target"]
-        lun = matches["lun"]
+        try:
+            re.search(
+                r"^\d+[-:]\d+[-:]\d+[-:]\d+$",
+                scsi_address)
+        except:
+            raise Exception(f"Failed to find controller for {device_id}")
 
-        host_path = "/".join(itertools.takewhile(lambda x: not x.startswith("host"), dirs))
-        self.plug_command = f"echo '{port_id} {target_id} {lun}' > " \
-            f"{host_path}/host{controller_id}/scsi_host/host{controller_id}/scan"
-        return sysfs_addr
+        return sysfs_addr.full_path + "/device/delete"
+
+
+class VirtioDisk(Disk):
+    plug_all_command = "echo 1 > /sys/bus/pci/rescan"
+
+    def __init__(self, path, disk_type, serial_number, block_size):
+        Disk.__init__(self, path, disk_type, serial_number, block_size)
+        self.plug_command = VirtioDisk.plug_all_command
+        self.unplug_command = \
+            f"echo 1 > {self.get_unplug_path(self.get_device_id())}"
+
+    @classmethod
+    def get_unplug_path(cls, device_id):
+        ls_command = f"$(find -H /sys/devices/ -name {device_id} -type d)"
+        output = fs_utils.ls_item(f"{ls_command}")
+        sysfs_addr = fs_utils.parse_ls_output(output)[0]
+        if not sysfs_addr:
+            raise Exception(f"Failed to find sysfs address: ls -l {ls_command}")
+
+        dirs = sysfs_addr.full_path.split("/")
+
+        for i, path_component in enumerate(dirs[::-1]):
+            # Search for scsi address in sysfs path
+            matches = re.search(
+                r"^\d+:\d+:\d+.\d+$",
+                path_component)
+            if matches:
+                break
+        else:
+            raise Exception(f"Failed to find controller for {device_id}")
+
+        return "/".join(dirs[:-i]) + "/remove"
+
