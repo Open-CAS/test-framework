@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2022 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -11,9 +12,9 @@ from core.test_run import TestRun
 from test_utils.output import CmdException
 
 
-class RpmSet():
+class RpmSet:
     def __init__(self, packages_paths: list):
-            self.packages = packages_paths
+        self.packages = packages_paths
 
     def _get_package_names(self):
         return " ".join([os.path.splitext(os.path.basename(pckg))[0] for pckg in self.packages])
@@ -66,9 +67,9 @@ class RpmSet():
             )
 
 
-class DebSet():
+class DebSet:
     def __init__(self, packages_paths: list):
-            self.packages = packages_paths
+        self.packages = packages_paths
 
     def _get_package_names(self):
         return " ".join([os.path.basename(pckg).split("_")[0] for pckg in self.packages])
