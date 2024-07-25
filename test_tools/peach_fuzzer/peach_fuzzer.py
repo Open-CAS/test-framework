@@ -1,10 +1,10 @@
 #
 # Copyright(c) 2021 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
 import os
-import wget
 import base64
 import posixpath
 import random
@@ -15,6 +15,7 @@ from collections import namedtuple
 from core.test_run import TestRun
 from test_tools import fs_utils
 from test_tools.fs_utils import create_directory, check_if_file_exists, write_file
+from test_utils import os_utils
 
 
 class PeachFuzzer:
@@ -28,7 +29,7 @@ class PeachFuzzer:
                            "peach-3.0.202-linux-x86_64-release.zip"
     base_dir = "/root/Fuzzy"
     peach_dir = "peach-3.0.202-linux-x86_64-release"
-    xml_config_template = posixpath.join(posixpath.dirname(__file__), "config_template.xml")
+    xml_config_template = posixpath.join(os.path.dirname(__file__), "config_template.xml")
     xml_config_file = posixpath.join(base_dir, "fuzzerConfig.xml")
     xml_namespace = "http://peachfuzzer.com/2012/Peach"
     fuzzy_output_file = posixpath.join(base_dir, "fuzzedParams.txt")
@@ -83,7 +84,7 @@ class PeachFuzzer:
         # process fuzzy output file locally on the controller as it can be very big
         local_fuzzy_file = tempfile.NamedTemporaryFile(delete=False)
         local_fuzzy_file.close()
-        TestRun.executor.rsync_from(cls.fuzzy_output_file, local_fuzzy_file.name)
+        TestRun.executor.copy_from(cls.fuzzy_output_file, local_fuzzy_file.name)
         with open(local_fuzzy_file.name, "r") as fd:
             for fuzzed_param_line in fd:
                 fuzzed_param_bytes = base64.b64decode(fuzzed_param_line)
@@ -150,14 +151,14 @@ class PeachFuzzer:
         """
         Install Peach Fuzzer on the DUT
         """
-        peach_archive = wget.download(cls.peach_fuzzer_3_0_url)
         create_directory(cls.base_dir, True)
-        TestRun.executor.rsync_to(f"\"{peach_archive}\"", f"{cls.base_dir}")
+        peach_archive = os_utils.download_file(
+            cls.peach_fuzzer_3_0_url, destination_dir=cls.base_dir
+        )
         TestRun.executor.run_expect_success(
             f'cd {cls.base_dir} && unzip -u "{peach_archive}"')
         if cls._is_installed():
             TestRun.LOGGER.info("Peach fuzzer installed successfully")
-            os.remove(peach_archive)
         else:
             TestRun.block("Peach fuzzer installation failed!")
 
