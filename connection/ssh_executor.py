@@ -152,10 +152,10 @@ class SshExecutor(BaseExecutor):
                 stderr=subprocess.PIPE,
                 timeout=timeout.total_seconds(),
             )
-        except Exception as e:
-            TestRun.LOGGER.exception(
-                f"Exception occurred during rsync process. "
-                f"Please check your SSH key-based authentication.\n{e}"
+        except subprocess.TimeoutExpired as e:
+            raise TimeoutError(
+                f"Timeout exception occurred during rsync process. "
+                f"Please check whether copying big file did not reach command timeout.\n{e}"
             )
 
         if completed_process.returncode:
