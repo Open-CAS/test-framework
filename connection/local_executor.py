@@ -3,23 +3,26 @@
 # Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
-
+import os
 import subprocess
 from datetime import timedelta
 
 from connection.base_executor import BaseExecutor
 from core.test_run import TestRun
-from test_utils.output import Output
+from test_tools.fs_utils import copy
+from test_utils.output import Output, CmdException
 
 
 class LocalExecutor(BaseExecutor):
-    def _execute(self, command, timeout):
-        bash_path = TestRun.config.get("bash_path", "/bin/bash")
+    def __init__(self):
+        default_executable_path = "/bin/bash" if os.name == 'posix' else None
+        self._executable_path = TestRun.config.get("executable_path", default_executable_path)
 
+    def _execute(self, command, timeout):
         completed_process = subprocess.run(
             command,
             shell=True,
-            executable=bash_path,
+            executable=self._executable_path,
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             timeout=timeout.total_seconds(),
@@ -41,7 +44,6 @@ class LocalExecutor(BaseExecutor):
         dut_to_controller=False,
     ):
         options = []
-        bash_path = TestRun.config.get("bash_path", "/bin/bash")
 
         if delete:
             options.append("--delete")
@@ -53,14 +55,10 @@ class LocalExecutor(BaseExecutor):
         for exclude in exclude_list:
             options.append(f"--exclude {exclude}")
 
-        completed_process = subprocess.run(
-            f'rsync -r {src} {dst} {" ".join(options)}',
-            shell=True,
-            executable=bash_path,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE,
-            timeout=timeout.total_seconds(),
-        )
+        output = self._execute(f'rsync -r {src} {dst} {" ".join(options)}', timeout)
 
-        if completed_process.returncode:
-            raise Exception(f"rsync failed:\n{completed_process}")
+        if output.exit_code:
+            raise CmdException("rsync failed", output)
+
+    def _copy(self, src, dst, dut_to_controller: bool):
+        copy(src, dst, recursive=True)
