@@ -19,6 +19,9 @@ class BaseExecutor:
                dut_to_controller):
         raise NotImplementedError()
 
+    def _copy(self, src, dst, dut_to_controller: bool):
+        raise NotImplementedError()
+
     def rsync_to(self, src, dst, delete=False, symlinks=False, checksum=False, exclude_list=[],
                  timeout: timedelta = timedelta(seconds=90)):
         return self._rsync(src, dst, delete, symlinks, checksum, exclude_list, timeout, False)
@@ -26,6 +29,12 @@ class BaseExecutor:
     def rsync_from(self, src, dst, delete=False, symlinks=False, checksum=False, exclude_list=[],
                    timeout: timedelta = timedelta(seconds=90)):
         return self._rsync(src, dst, delete, symlinks, checksum, exclude_list, timeout, True)
+
+    def copy_to(self, src, dst):
+        return self._copy(src, dst, True)
+
+    def copy_from(self, src, dst):
+        return self._copy(src, dst, False)
 
     def is_remote(self):
         return False
