@@ -1,10 +1,10 @@
 #
 # Copyright(c) 2021 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
 import os
-import wget
 import base64
 import posixpath
 import random
@@ -15,6 +15,7 @@ from collections import namedtuple
 from core.test_run import TestRun
 from test_tools import fs_utils
 from test_tools.fs_utils import create_directory, check_if_file_exists, write_file
+from test_utils import os_utils
 
 
 class PeachFuzzer:
@@ -28,7 +29,7 @@ class PeachFuzzer:
                            "peach-3.0.202-linux-x86_64-release.zip"
     base_dir = "/root/Fuzzy"
     peach_dir = "peach-3.0.202-linux-x86_64-release"
-    xml_config_template = posixpath.join(posixpath.dirname(__file__), "config_template.xml")
+    xml_config_template = os.path.join(os.path.dirname(__file__), "config_template.xml")
     xml_config_file = posixpath.join(base_dir, "fuzzerConfig.xml")
     xml_namespace = "http://peachfuzzer.com/2012/Peach"
     fuzzy_output_file = posixpath.join(base_dir, "fuzzedParams.txt")
@@ -40,8 +41,7 @@ class PeachFuzzer:
     def get_fuzzed_command(cls, command_template: bytes, count: int):
         """
         Generate command with fuzzed parameter provided on command_template.
-        Command is ready to be executed with test executor
-        :param command_template: byte string with command to be executed.
+        :param command_template: string with command to be executed.
                parameter to be replaced with fuzzed string has to be tested_param_placeholder
         :param count: amount of fuzzed commands to generate
         :returns: named tuple with fuzzed param and CLI ready to be executed with Test-Framework
@@ -49,14 +49,18 @@ class PeachFuzzer:
         """
         TestRun.LOGGER.info(f"Try to get commands with fuzzed parameters")
         FuzzedCommand = namedtuple('FuzzedCommand', ['param', 'command'])
+        command_template = command_template.encode("ascii")
         if cls.tested_param_placeholder not in command_template:
             TestRun.block("No param placeholder is found in command template!")
-        cmd_prefix = b"echo "
-        cmd_suffix = b" | base64 --decode | sh"
+
         for fuzzed_parameter in cls.generate_peach_fuzzer_parameters(count):
-            yield FuzzedCommand(fuzzed_parameter,
-                                cmd_prefix + base64.b64encode(command_template.replace(
-                                    cls.tested_param_placeholder, fuzzed_parameter)) + cmd_suffix)
+            yield FuzzedCommand(
+                fuzzed_parameter,
+                command_template.replace(
+                    cls.tested_param_placeholder,
+                    fuzzed_parameter
+                )
+            )
 
     @classmethod
     def generate_peach_fuzzer_parameters(cls, count: int):
@@ -83,7 +87,7 @@ class PeachFuzzer:
         # process fuzzy output file locally on the controller as it can be very big
         local_fuzzy_file = tempfile.NamedTemporaryFile(delete=False)
         local_fuzzy_file.close()
-        TestRun.executor.rsync_from(cls.fuzzy_output_file, local_fuzzy_file.name)
+        TestRun.executor.copy_from(cls.fuzzy_output_file, local_fuzzy_file.name)
         with open(local_fuzzy_file.name, "r") as fd:
             for fuzzed_param_line in fd:
                 fuzzed_param_bytes = base64.b64decode(fuzzed_param_line)
@@ -112,7 +116,7 @@ class PeachFuzzer:
                    value: 'true'
         """
 
-        if not posixpath.exists(cls.xml_config_template):
+        if not os.path.exists(cls.xml_config_template):
             TestRun.block("Peach fuzzer xml config template not found!")
         root = etree.parse(cls.xml_config_template)
         data_model = root.find(f'{{{cls.xml_namespace}}}DataModel[@name="Value"]')
@@ -127,7 +131,7 @@ class PeachFuzzer:
         and just passed as is to PeachFuzzer.
         :param config_file: Peach Fuzzer XML config to be copied to the DUT
         """
-        if not posixpath.exists(config_file):
+        if not os.path.exists(config_file):
             TestRun.block("Peach fuzzer xml config to be copied doesn't exist!")
         create_directory(cls.base_dir, True)
         TestRun.executor.rsync_to(config_file, cls.xml_config_file)
@@ -150,14 +154,14 @@ class PeachFuzzer:
         """
         Install Peach Fuzzer on the DUT
         """
-        peach_archive = wget.download(cls.peach_fuzzer_3_0_url)
         create_directory(cls.base_dir, True)
-        TestRun.executor.rsync_to(f"\"{peach_archive}\"", f"{cls.base_dir}")
+        peach_archive = os_utils.download_file(
+            cls.peach_fuzzer_3_0_url, destination_dir=cls.base_dir
+        )
         TestRun.executor.run_expect_success(
             f'cd {cls.base_dir} && unzip -u "{peach_archive}"')
         if cls._is_installed():
             TestRun.LOGGER.info("Peach fuzzer installed successfully")
-            os.remove(peach_archive)
         else:
             TestRun.block("Peach fuzzer installation failed!")
 
