@@ -161,6 +161,16 @@ class SshExecutor(BaseExecutor):
         if completed_process.returncode:
             raise Exception(f"rsync failed:\n{completed_process}")
 
+    def _copy(self, src, dst, dut_to_controller: bool):
+        sftp = self.ssh.open_sftp()
+
+        if dut_to_controller:
+            sftp.put(src, dst)
+        else:
+            sftp.get(src, dst)
+
+        sftp.close()
+
     def is_remote(self):
         return True
 
