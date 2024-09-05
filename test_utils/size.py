@@ -1,10 +1,12 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
 import enum
 import math
+import random
 
 from multimethod import multimethod
 
@@ -209,3 +211,8 @@ class Size:
     @staticmethod
     def zero():
         return Size(0)
+
+    @staticmethod
+    def generate_random_size(min_size: int, max_size: int, unit: Unit):
+        size = random.randint(min_size, max_size)
+        return Size(value=float(size), unit=unit)
