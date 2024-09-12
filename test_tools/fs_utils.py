@@ -125,8 +125,12 @@ def move(source, destination, force: bool = False):
     return TestRun.executor.run_expect_success(cmd)
 
 
-def remove(path, force: bool = False, recursive: bool = False, ignore_errors: bool = False):
-    cmd = f"rm{' --force' if force else ''}{' --recursive' if recursive else ''} \"{path}\""
+def remove(path: str, force: bool = False, recursive: bool = False, ignore_errors: bool = False):
+    cmd = "rm"
+    cmd += " --force" if force else ""
+    cmd += " --recursive" if recursive else ""
+    cmd += f" \"{path}\"" if not path.endswith("*") else f" \"{path[:-1]}\"*"
+
     output = TestRun.executor.run(cmd)
     if output.exit_code != 0 and not ignore_errors:
         raise Exception(f"Could not remove file {path}."
