@@ -100,10 +100,6 @@ def check_if_regular_file_exists(path):
     return TestRun.executor.run(f"test -f \"{path}\"").exit_code == 0
 
 
-def check_if_special_block_exist(path):
-    return TestRun.executor.run(f"test -b \"{path}\"").exit_code == 0
-
-
 def check_if_symlink_exists(path):
     return TestRun.executor.run(f"test -L \"{path}\"").exit_code == 0
 
