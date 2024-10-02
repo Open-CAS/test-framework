@@ -190,6 +190,13 @@ def diff(file, other_file):
         return output.stderr
 
 
+def md5sum(file, binary=True):
+    output = TestRun.executor.run(f"md5sum {'-b' if binary else ''} {file}")
+    if output.exit_code != 0:
+        raise Exception(f"Md5sum command execution failed! {output.stdout}\n{output.stderr}")
+    return output.stdout.split()[0]
+
+
 # For some reason separators other than '/' don't work when using sed on system paths
 # This requires escaping '/' in pattern and target string
 def escape_sed_string(string: str, sed_replace: bool = False):
