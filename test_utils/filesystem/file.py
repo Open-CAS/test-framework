@@ -14,14 +14,14 @@ class File(FsItem):
     def __init__(self, full_path):
         FsItem.__init__(self, full_path)
 
-    def compare(self, other_file):
-        return fs_utils.compare(str(self), str(other_file))
+    def compare(self, other_file, timeout: timedelta = timedelta(minutes=30)):
+        return fs_utils.compare(str(self), str(other_file), timeout)
 
-    def diff(self, other_file):
-        return fs_utils.diff(str(self), str(other_file))
+    def diff(self, other_file, timeout: timedelta = timedelta(minutes=30)):
+        return fs_utils.diff(str(self), str(other_file), timeout)
 
-    def md5sum(self, binary=True):
-        return fs_utils.md5sum(str(self), binary)
+    def md5sum(self, binary=True, timeout: timedelta = timedelta(minutes=30)):
+        return fs_utils.md5sum(str(self), binary, timeout)
 
     def read(self):
         return fs_utils.read_file(str(self))
