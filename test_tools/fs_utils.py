@@ -8,10 +8,10 @@
 import base64
 import math
 import textwrap
+from collections import namedtuple
+from datetime import datetime, timedelta
 
 from aenum import IntFlag, Enum
-from collections import namedtuple
-from datetime import datetime
 
 from core.test_run import TestRun
 from test_tools.dd import Dd
