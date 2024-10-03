@@ -108,17 +108,18 @@ def copy(source: str,
          destination: str,
          force: bool = False,
          recursive: bool = False,
-         dereference: bool = False):
+         dereference: bool = False,
+         timeout: timedelta = timedelta(minutes=30)):
     cmd = f"cp{' --force' if force else ''}" \
           f"{' --recursive' if recursive else ''}" \
           f"{' --dereference' if dereference else ''} " \
           f"{source} {destination}"
-    return TestRun.executor.run_expect_success(cmd)
+    return TestRun.executor.run_expect_success(cmd, timeout)
 
 
-def move(source, destination, force: bool = False):
+def move(source, destination, force: bool = False, timeout: timedelta = timedelta(minutes=30)):
     cmd = f"mv{' --force' if force else ''} \"{source}\" \"{destination}\""
-    return TestRun.executor.run_expect_success(cmd)
+    return TestRun.executor.run_expect_success(cmd, timeout)
 
 
 def remove(path: str, force: bool = False, recursive: bool = False, ignore_errors: bool = False):
@@ -189,6 +190,13 @@ def md5sum(file, binary=True, timeout: timedelta = timedelta(minutes=30)):
     if output.exit_code != 0:
         raise Exception(f"Md5sum command execution failed! {output.stdout}\n{output.stderr}")
     return output.stdout.split()[0]
+
+
+def crc32sum(file, timeout: timedelta = timedelta(minutes=30)):
+    output = TestRun.executor.run(f"crc32 {file}", timeout)
+    if output.exit_code != 0:
+        raise Exception(f"crc32 command execution failed! {output.stdout}\n{output.stderr}")
+    return output.stdout
 
 
 # For some reason separators other than '/' don't work when using sed on system paths

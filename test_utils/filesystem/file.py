@@ -23,6 +23,9 @@ class File(FsItem):
     def md5sum(self, binary=True, timeout: timedelta = timedelta(minutes=30)):
         return fs_utils.md5sum(str(self), binary, timeout)
 
+    def crc32sum(self, timeout: timedelta = timedelta(minutes=30)):
+        return fs_utils.crc32sum(str(self), timeout)
+
     def read(self):
         return fs_utils.read_file(str(self))
 
@@ -51,8 +54,9 @@ class File(FsItem):
              destination,
              force: bool = False,
              recursive: bool = False,
-             dereference: bool = False):
-        fs_utils.copy(str(self), destination, force, recursive, dereference)
+             dereference: bool = False,
+             timeout: timedelta = timedelta(minutes=30)):
+        fs_utils.copy(str(self), destination, force, recursive, dereference, timeout)
         if fs_utils.check_if_directory_exists(destination):
             path = f"{destination}{'/' if destination[-1] != '/' else ''}{self.name}"
         else:
