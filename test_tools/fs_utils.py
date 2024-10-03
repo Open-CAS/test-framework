@@ -108,17 +108,18 @@ def copy(source: str,
          destination: str,
          force: bool = False,
          recursive: bool = False,
-         dereference: bool = False):
+         dereference: bool = False,
+         timeout: timedelta = timedelta(minutes=30)):
     cmd = f"cp{' --force' if force else ''}" \
           f"{' --recursive' if recursive else ''}" \
           f"{' --dereference' if dereference else ''} " \
           f"{source} {destination}"
-    return TestRun.executor.run_expect_success(cmd)
+    return TestRun.executor.run_expect_success(cmd, timeout)
 
 
-def move(source, destination, force: bool = False):
+def move(source, destination, force: bool = False, timeout: timedelta = timedelta(minutes=30)):
     cmd = f"mv{' --force' if force else ''} \"{source}\" \"{destination}\""
-    return TestRun.executor.run_expect_success(cmd)
+    return TestRun.executor.run_expect_success(cmd, timeout)
 
 
 def remove(path: str, force: bool = False, recursive: bool = False, ignore_errors: bool = False):
