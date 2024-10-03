@@ -14,7 +14,7 @@ class Dut:
             Disk.create_disk(
                 disk_info["path"],
                 DiskType[disk_info["type"]],
-                disk_info["serial"],
+                disk_info.get("serial", None),
                 disk_info["blocksize"],
                 )
             for disk_info in dut_info.get("disks", [])
