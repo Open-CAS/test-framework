@@ -191,6 +191,13 @@ def md5sum(file, binary=True, timeout: timedelta = timedelta(minutes=30)):
     return output.stdout.split()[0]
 
 
+def crc32sum(file, timeout: timedelta = timedelta(minutes=30)):
+    output = TestRun.executor.run(f"crc32 {file}", timeout)
+    if output.exit_code != 0:
+        raise Exception(f"crc32 command execution failed! {output.stdout}\n{output.stderr}")
+    return output.stdout
+
+
 # For some reason separators other than '/' don't work when using sed on system paths
 # This requires escaping '/' in pattern and target string
 def escape_sed_string(string: str, sed_replace: bool = False):

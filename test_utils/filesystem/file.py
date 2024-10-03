@@ -23,6 +23,9 @@ class File(FsItem):
     def md5sum(self, binary=True, timeout: timedelta = timedelta(minutes=30)):
         return fs_utils.md5sum(str(self), binary, timeout)
 
+    def crc32sum(self, timeout: timedelta = timedelta(minutes=30)):
+        return fs_utils.crc32sum(str(self), timeout)
+
     def read(self):
         return fs_utils.read_file(str(self))
 
