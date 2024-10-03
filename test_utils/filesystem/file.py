@@ -1,9 +1,10 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
+# Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
+from datetime import timedelta
 
-from core.test_run import TestRun
 from test_tools import fs_utils
 from test_tools.dd import Dd
 from test_utils.filesystem.fs_item import FsItem
