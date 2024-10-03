@@ -164,9 +164,8 @@ def create_file(path):
     return TestRun.executor.run_expect_success(cmd)
 
 
-def compare(file, other_file):
-    output = TestRun.executor.run(
-        f"cmp --silent \"{file}\" \"{other_file}\"")
+def compare(file, other_file, timeout: timedelta = timedelta(minutes=30)):
+    output = TestRun.executor.run(f"cmp --silent \"{file}\" \"{other_file}\"", timeout)
     if output.exit_code == 0:
         return True
     elif output.exit_code > 1:
@@ -175,15 +174,21 @@ def compare(file, other_file):
         return False
 
 
-def diff(file, other_file):
-    output = TestRun.executor.run(
-        f"diff \"{file}\" \"{other_file}\"")
+def diff(file, other_file, timeout: timedelta = timedelta(minutes=30)):
+    output = TestRun.executor.run(f"diff \"{file}\" \"{other_file}\"", timeout)
     if output.exit_code == 0:
         return None
     elif output.exit_code > 1:
         raise Exception(f"Diff command execution failed. {output.stdout}\n{output.stderr}")
     else:
         return output.stderr
+
+
+def md5sum(file, binary=True, timeout: timedelta = timedelta(minutes=30)):
+    output = TestRun.executor.run(f"md5sum {'-b' if binary else ''} {file}", timeout)
+    if output.exit_code != 0:
+        raise Exception(f"Md5sum command execution failed! {output.stdout}\n{output.stderr}")
+    return output.stdout.split()[0]
 
 
 # For some reason separators other than '/' don't work when using sed on system paths
