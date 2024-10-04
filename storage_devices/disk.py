@@ -6,7 +6,6 @@
 
 import json
 import re
-
 from datetime import timedelta
 from enum import IntEnum
 
@@ -145,15 +144,13 @@ class Disk(Device):
         disk_utils.remove_parition(self, part_number)
         self.partitions.remove(part)
 
-    def umount_all_partitions(self):
-        TestRun.LOGGER.info(f"Unmounting all partitions from: {self.path}")
-        cmd = f"umount -l {fs_utils.readlink(self.path)}*?"
-        TestRun.executor.run(cmd)
-
-    def remove_partitions(self):
+    def unmount_all_partitions(self):
         for part in self.partitions:
             if part.is_mounted():
                 part.unmount()
+
+    def remove_partitions(self):
+        self.unmount_all_partitions()
         if disk_utils.remove_partitions(self):
             self.partitions.clear()
 
