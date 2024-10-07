@@ -38,7 +38,7 @@ class PeachFuzzer:
     escape_chars = '\\\n"\'&|;()`<>$! '
 
     @classmethod
-    def get_fuzzed_command(cls, command_template: bytes, count: int):
+    def get_fuzzed_command(cls, command_template: str, count: int):
         """
         Generate command with fuzzed parameter provided on command_template.
         :param command_template: string with command to be executed.
