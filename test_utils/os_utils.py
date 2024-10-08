@@ -460,3 +460,15 @@ def get_cores_ids_range(numa_node: int):
     parse_output = re.findall(r'(\d+),(\d+),(?:\d+),(\d+),,', output, re.I)
 
     return [element[0] for element in parse_output if int(element[2]) == numa_node]
+
+
+def create_user(username, additional_params=None):
+    command = "useradd "
+    if additional_params:
+        command += "".join([f"-{p} " for p in additional_params])
+    command += username
+    return TestRun.executor.run_expect_success(command)
+
+
+def check_if_user_exists(username):
+    return TestRun.executor.run(f"id {username}").exit_code == 0
