@@ -107,11 +107,11 @@ def get_disk_serial_number(dev_path):
     commands = [
         f"(udevadm info --query=all --name={dev_path} | grep 'SCSI.*_SERIAL' || "
         f"udevadm info --query=all --name={dev_path} | grep 'ID_SERIAL_SHORT') | "
-        "awk --field-separator '=' '{print $NF}'",
+        "awk -F '=' '{print $NF}'",
         f"sg_inq {dev_path} 2> /dev/null | grep '[Ss]erial number:' | "
         "awk '{print $NF}'",
         f"udevadm info --query=all --name={dev_path} | grep 'ID_SERIAL' | "
-        "awk --field-separator '=' '{print $NF}'"
+        "awk -F '=' '{print $NF}'"
     ]
     for command in commands:
         serial = TestRun.executor.run(command).stdout
