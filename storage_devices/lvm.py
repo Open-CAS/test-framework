@@ -165,7 +165,7 @@ class LvmConfiguration:
         TestRun.executor.run(cmd)
 
     @staticmethod
-    def set_use_devices_file(use_devices_file=False):
+    def set_use_devices_file(use_devices_file=True):
         cmd = (fr"sed -i 's/^\s*#*\s*\(use_devicesfile\).*/\t\1 = "
                fr"{1 if use_devices_file else 0}/' {lvm_config_path}")
         TestRun.executor.run(cmd)
@@ -460,13 +460,8 @@ class Lvm(Disk):
         return cls.discover_logical_volumes()
 
     @staticmethod
-    def remove(lv_name: str, vg_name: str):
-        if not lv_name:
-            raise ValueError("LV name needed for LV remove operation.")
-        if not vg_name:
-            raise ValueError("VG name needed for LV remove operation.")
-
-        cmd = f"lvremove -f {vg_name}/{lv_name}"
+    def remove(lv_path: str):
+        cmd = f"lvremove -f {lv_path}"
         return TestRun.executor.run(cmd)
 
     @staticmethod
@@ -477,22 +472,41 @@ class Lvm(Disk):
         cmd = f"pvremove {pv_name}"
         return TestRun.executor.run(cmd)
 
+    @staticmethod
+    def get_os_vg():
+        disks = get_system_disks()
+        cmd = (f"pvdisplay -c | grep -e /dev/{' -e /dev/'.join(disks)} | "
+               "awk -F':' '$2 != \"\" {print $2}'")  # display non-empty groups
+        os_vg_names = TestRun.executor.run(cmd).stdout
+        if os_vg_names:
+            return set(os_vg_names.split("\n"))  # remove duplicates
+        return []
+
+    @staticmethod
+    def get_non_os_vg():
+        disks = get_system_disks()
+        cmd = (f"pvdisplay -c | grep -Ev \'/dev/{'|/dev'.join(disks)}' | "
+               "awk -F':' '$2 != \"\" {print $2}\'")  # display non-empty groups
+        non_os_vg_names = TestRun.executor.run(cmd).stdout
+        if non_os_vg_names:
+            return set(non_os_vg_names.split("\n"))  # remove duplicates
+        return []
+
     @classmethod
     def remove_all(cls):
-        cmd = f"lvdisplay | grep 'LV Path' | awk '{{print $3}}'"
-        lvm_paths = TestRun.executor.run(cmd).stdout.splitlines()
-        for lvm_path in lvm_paths:
-            lv_name = lvm_path.split('/')[-1]
-            vg_name = lvm_path.split('/')[-2]
-            cls.remove(lv_name, vg_name)
+        non_os_vg_names = Lvm.get_non_os_vg()
+        cmd = "lvdisplay -c | awk -F':' '{{print $1,$2}}'"  # prints lv_path vg_name
+        lvs = [tuple(lv.strip().split(' ')) for lv in TestRun.executor.run(cmd).stdout.splitlines()]
+        [cls.remove(lv[0]) for lv in lvs if lv[1] in non_os_vg_names]
 
-        cmd = f"vgdisplay | grep 'VG Name' | awk '{{print $3}}'"
-        vg_names = TestRun.executor.run(cmd).stdout.splitlines()
-        for vg_name in vg_names:
+        for vg_name in non_os_vg_names:
             TestRun.executor.run(f"vgchange -an {vg_name}")
             VolumeGroup.remove(vg_name)
 
         cmd = f"pvdisplay | grep 'PV Name' | awk '{{print $3}}'"
+        os_disks = get_system_disks()
+        # invert grep to make sure os_disks won`t be wiped during lvms cleanup
+        cmd += "".join([f" | grep -v {os_disk}" for os_disk in os_disks])
         pv_names = TestRun.executor.run(cmd).stdout.splitlines()
         for pv_name in pv_names:
             cls.remove_pv(pv_name)
