@@ -1,16 +1,15 @@
 #
 # Copyright(c) 2022 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
-import threading
 
+import threading
 from typing import Union
 
-from api.cas.core import Core
 from core.test_run import TestRun
 from storage_devices.device import Device
-from storage_devices.disk import Disk, NvmeDisk
-from storage_devices.partition import Partition
+from storage_devices.disk import Disk
 from test_tools.fs_utils import readlink
 from test_utils.disk_finder import resolve_to_by_id_link
 from test_utils.filesystem.symlink import Symlink
@@ -29,16 +28,12 @@ class LvmConfiguration:
             lvm_filters: [] = None,
             pv_num: int = None,
             vg_num: int = None,
-            lv_num: int = None,
-            cache_num: int = None,
-            cas_dev_num: int = None
+            lv_num: int = None
     ):
         self.lvm_filters = lvm_filters
         self.pv_num = pv_num
         self.vg_num = vg_num
         self.lv_num = lv_num
-        self.cache_num = cache_num
-        self.cas_dev_num = cas_dev_num
 
     @staticmethod
     def __read_definition_from_lvm_config(
@@ -122,7 +117,7 @@ class LvmConfiguration:
         return cls.__read_definition_from_lvm_config(global_filter_prototype_regex)
 
     @classmethod
-    def add_block_devices_to_lvm_config(
+    def add_block_device_to_lvm_config(
             cls,
             device_type: str
     ):
@@ -137,44 +132,19 @@ class LvmConfiguration:
             filters: []
     ):
         if filters is None:
-            TestRun.LOGGER.error(f"Lvm filters for lvm config not provided.")
+            raise ValueError(f"Lvm filters for lvm config not provided.")
 
         for f in filters:
             cls.__add_filter_to_lvm_config(f)
 
     @classmethod
-    def configure_dev_types_in_config(
-            cls,
-            devices: ([Device], Device)
-    ):
-        if isinstance(devices, list):
-            devs = []
-            for device in devices:
-                dev = device.parent_device if isinstance(device, Partition) else device
-                devs.append(dev)
-
-            if any(isinstance(dev, Core) for dev in devs):
-                cls.add_block_devices_to_lvm_config("cas")
-            if any(isinstance(dev, NvmeDisk) for dev in devs):
-                cls.add_block_devices_to_lvm_config("nvme")
-        else:
-            dev = devices.parent_device if isinstance(devices, Partition) else devices
-            if isinstance(dev, Core):
-                cls.add_block_devices_to_lvm_config("cas")
-            if isinstance(dev, NvmeDisk):
-                cls.add_block_devices_to_lvm_config("nvme")
-
-    @classmethod
     def configure_filters(
             cls,
             lvm_filters: [],
-            devices: ([Device], Device)
     ):
         if lvm_filters:
             TestRun.LOGGER.info(f"Preparing configuration for LVMs - filters.")
             LvmConfiguration.add_filters_to_lvm_config(lvm_filters)
-
-        cls.configure_dev_types_in_config(devices)
 
     @staticmethod
     def remove_global_filter_from_config():
@@ -184,6 +154,12 @@ class LvmConfiguration:
     @staticmethod
     def remove_filters_from_config():
         cmd = f"sed -i '/{filter_prototype_regex}/d' {lvm_config_path}"
+        TestRun.executor.run(cmd)
+
+    @staticmethod
+    def set_use_devices_file(use_devices_file=False):
+        cmd = (fr"sed -i 's/^\s*#*\s*\(use_devicesfile\).*/\t\1 = "
+               fr"{1 if use_devices_file else 0}/' {lvm_config_path}")
         TestRun.executor.run(cmd)
 
 
@@ -266,7 +242,7 @@ class VolumeGroup:
         if vg_name in volume_groups:
             return cls(vg_name)
         else:
-            TestRun.LOGGER.error("Had not found newly created VG.")
+            raise Exception("Had not found newly created VG.")
 
     @staticmethod
     def remove(vg_name: str):
@@ -332,13 +308,10 @@ class Lvm(Disk):
     @classmethod
     def configure_global_filter(
             cls,
-            dev_first: Device,
             lv_amount: int,
             pv_devs: ([Device], Device)
     ):
-        device_first = dev_first.parent_device if isinstance(dev_first, Partition) else dev_first
-        if lv_amount > 1 and isinstance(device_first, Core):
-
+        if lv_amount > 1:
             global_filter_def = LvmConfiguration.read_global_filter_definition_from_lvm_config()
             if not isinstance(pv_devs, list):
                 pv_devs = [pv_devs]
@@ -388,13 +361,13 @@ class Lvm(Disk):
             cls,
             devices: ([Device], Device),
             lvm_configuration: LvmConfiguration,
-            lvm_as_core: bool = False
+            global_filter: bool = False
     ):
         pv_per_vg = int(lvm_configuration.pv_num / lvm_configuration.vg_num)
         lv_per_vg = int(lvm_configuration.lv_num / lvm_configuration.vg_num)
         lv_size_percentage = int(100 / lv_per_vg)
 
-        LvmConfiguration.configure_filters(lvm_configuration.lvm_filters, devices)
+        LvmConfiguration.configure_filters(lvm_configuration.lvm_filters)
 
         logical_volumes = []
 
@@ -405,17 +378,15 @@ class Lvm(Disk):
                 end_range = start_range + pv_per_vg
                 for i in range(start_range, end_range):
                     pv_devs.append(devices[i])
-                device_first = devices[0]
             else:
                 pv_devs = devices
-                device_first = devices
 
             for j in range(lv_per_vg):
                 lv = cls.create(lv_size_percentage, pv_devs)
                 logical_volumes.append(lv)
 
-            if lvm_as_core:
-                cls.configure_global_filter(device_first, lv_per_vg, pv_devs)
+            if global_filter:
+                cls.configure_global_filter(lv_per_vg, pv_devs)
 
         return logical_volumes
 
@@ -431,7 +402,7 @@ class Lvm(Disk):
         elif isinstance(volume_size_or_percent, int):
             size_cmd = f"--extents {volume_size_or_percent}%VG"
         else:
-            TestRun.LOGGER.error(f"Incorrect type of the first argument (volume_size_or_percent).")
+            raise ValueError(f"Incorrect type of the first argument (volume_size_or_percent).")
 
         if not name:
             name = cls.__get_unique_lv_name()
