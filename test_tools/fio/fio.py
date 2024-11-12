@@ -1,21 +1,24 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
 import datetime
 import uuid
 
+from packaging.version import Version
 import test_tools.fio.fio_param
 import test_tools.fs_utils
 from core.test_run import TestRun
 from test_tools import fs_utils
 from test_utils import os_utils
+from test_utils.output import CmdException
 
 
 class Fio:
     def __init__(self, executor_obj=None):
-        self.fio_version = "fio-3.30"
+        self.min_fio_version = Version(TestRun.config.get("fio_version", "3.30"))
         self.default_run_time = datetime.timedelta(hours=1)
         self.jobs = []
         self.executor = executor_obj if executor_obj is not None else TestRun.executor
@@ -26,7 +29,8 @@ class Fio:
         self.base_cmd_parameters = test_tools.fio.fio_param.FioParamCmd(self, self.executor)
         self.global_cmd_parameters = test_tools.fio.fio_param.FioParamConfig(self, self.executor)
 
-        self.fio_file = f'fio_run_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}_{uuid.uuid4().hex}'
+        self.fio_file = \
+            f'fio_run_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}_{uuid.uuid4().hex}'
         self.base_cmd_parameters\
             .set_param('eta', 'always')\
             .set_param('output-format', output_type.value)\
@@ -37,14 +41,21 @@ class Fio:
         return self.global_cmd_parameters
 
     def is_installed(self):
-        return self.executor.run("fio --version").stdout.strip() == self.fio_version
+        try:
+            output = self.executor.run_expect_success("fio --version").stdout
+        except CmdException:
+            return False
+        current_version = Version(output.strip().removeprefix("fio-"))
+        return current_version >= self.min_fio_version
 
     def install(self):
-        fio_url = f"http://brick.kernel.dk/snaps/{self.fio_version}.tar.bz2"
+        fio_url = f"http://brick.kernel.dk/snaps/fio-{self.min_fio_version}.tar.bz2"
         fio_package = os_utils.download_file(fio_url)
         fs_utils.uncompress_archive(fio_package)
-        TestRun.executor.run_expect_success(f"cd {fio_package.parent_dir}/{self.fio_version}"
-                                            f" && ./configure && make -j && make install")
+        TestRun.executor.run_expect_success(
+            f"cd {fio_package.parent_dir}/fio-{self.min_fio_version}"
+            f" && ./configure && make -j && make install"
+        )
 
     def calculate_timeout(self):
         if "time_based" not in self.global_cmd_parameters.command_flags:
