@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -11,6 +12,7 @@ from datetime import timedelta, datetime
 
 from aenum import IntFlag, Enum, IntEnum
 from packaging import version
+from typing import List
 
 from core.test_run import TestRun
 from storage_devices.device import Device
@@ -472,3 +474,13 @@ def create_user(username, additional_params=None):
 
 def check_if_user_exists(username):
     return TestRun.executor.run(f"id {username}").exit_code == 0
+
+
+def get_block_device_names_list(exclude_list: List[int] = None) -> List[str]:
+    cmd = "lsblk -lo NAME"
+    if exclude_list is not None:
+        cmd += f" -e {','.join(str(type_id) for type_id in exclude_list)}"
+    devices = TestRun.executor.run_expect_success(cmd).stdout
+    devices_list = devices.splitlines()
+    devices_list.sort()
+    return devices_list
