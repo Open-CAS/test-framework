@@ -288,8 +288,8 @@ class SataDisk(Disk):
     @classmethod
     def plug_all(cls) -> Output:
         cmd = (
-            f"for i in $(find -H /sys/devices/ -path '*/scsi_host/*/scan' -type f); do echo "
-            f"'- - -' > $i; done;"
+            "find -H /sys/devices/ -path '*/scsi_host/*/scan' -type f |"
+            " xargs -P20 -I % sh -c \"echo '- - -' | tee %\""
         )
         output = TestRun.executor.run_expect_success(cmd)
         return output
