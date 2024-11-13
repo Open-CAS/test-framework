@@ -11,7 +11,7 @@ from core.test_run import TestRun
 from storage_devices.device import Device
 from storage_devices.disk import Disk
 from test_tools.fs_utils import readlink
-from test_utils.disk_finder import resolve_to_by_id_link
+from test_utils.disk_finder import resolve_to_by_id_link, get_system_disks
 from test_utils.filesystem.symlink import Symlink
 from test_utils.size import Size
 
@@ -145,6 +145,14 @@ class LvmConfiguration:
         if lvm_filters:
             TestRun.LOGGER.info(f"Preparing configuration for LVMs - filters.")
             LvmConfiguration.add_filters_to_lvm_config(lvm_filters)
+
+            os_disk_filters = [
+                f"a|/dev/{disk}|" for disk in get_system_disks()
+            ] if Lvm.get_os_vg() else None
+
+            if os_disk_filters:
+                TestRun.LOGGER.info(f"Add OS disks to LVM filters.")
+                LvmConfiguration.add_filters_to_lvm_config(os_disk_filters)
 
     @staticmethod
     def remove_global_filter_from_config():
