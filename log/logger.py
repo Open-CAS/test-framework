@@ -199,12 +199,13 @@ class Log(HtmlLogManager, metaclass=Singleton):
 
         TestRun.executor.run(f"dmesg > {log_files['dmesg.log']}")
 
+        dut_identifier = TestRun.dut.ip if TestRun.dut.ip else TestRun.dut.config["host"]
         for log_name, log_source_path in log_files.items():
             try:
                 log_destination_path = os.path.join(
-                    self.base_dir, f"dut_info", TestRun.dut.ip, log_name
+                    self.base_dir, "dut_info", dut_identifier, log_name
                 )
-                TestRun.executor.rsync_from(log_source_path, log_destination_path)
+                TestRun.executor.copy_from(log_source_path, log_destination_path)
             except Exception as e:
                 TestRun.LOGGER.warning(
                     f"There was a problem during gathering {log_name} log.\n{str(e)}"
