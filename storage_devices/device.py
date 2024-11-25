@@ -101,6 +101,11 @@ class Device:
         return int(TestRun.executor.run_expect_success(
             f"cat {get_sysfs_path(self.get_device_id())}/device/numa_node").stdout)
 
+    def get_serial(self):
+        sysfs_path = get_sysfs_path(self.get_device_id())
+        serial_path = posixpath.join(sysfs_path, "device", "serial")
+        return TestRun.executor.run_expect_success(f"cat {serial_path}").stdout
+
     def __str__(self):
         return (
             f'system path: {self.path}, short link: /dev/{self.get_device_id()},'
