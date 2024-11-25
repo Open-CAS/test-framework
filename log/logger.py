@@ -35,6 +35,7 @@ def create_log(log_base_path, test_module, additional_args=None):
     finally:
         log.begin(test_name)
     print(f"\n<LogFile>{os.path.join(log.base_dir, 'main.html')}</LogFile>")
+    Log.add_file_logger(log.base_dir)
     if error_msg:
         log.exception(error_msg)
     return log
@@ -76,6 +77,14 @@ class Log(HtmlLogManager, metaclass=Singleton):
         logger.addHandler(stdout_handler)
         cls.logger = logger
         logger.info("Logger successfully initialized.")
+
+    @classmethod
+    def add_file_logger(cls, log_path):
+        file_handler = logging.FileHandler(os.path.join(log_path, 'stdout.log'))
+        file_handler.setLevel(logging.DEBUG)
+        formatter = logging.Formatter(Log.LOG_FORMAT, Log.DATE_FORMAT)
+        file_handler.setFormatter(formatter)
+        cls.logger.addHandler(file_handler)
 
     @contextmanager
     def step(self, message):
