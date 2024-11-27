@@ -8,9 +8,9 @@ import math
 import posixpath
 import re
 import time
-from datetime import timedelta, datetime
 
-from aenum import IntFlag, Enum, IntEnum
+from datetime import timedelta, datetime
+from enum import IntFlag, Enum, IntEnum, StrEnum
 from packaging import version
 from typing import List
 
@@ -26,6 +26,14 @@ from test_utils.size import Size, Unit
 
 DEBUGFS_MOUNT_POINT = "/sys/kernel/debug"
 MEMORY_MOUNT_POINT = "/mnt/memspace"
+
+
+class Distro(StrEnum):
+    UBUNTU = "ubuntu"
+    DEBIAN = "debian"
+    REDHAT = "rhel"
+    OPENEULER = "openeuler"
+    CENTOS = "centos"
 
 
 class DropCachesMode(IntFlag):
@@ -100,6 +108,17 @@ class Runlevel(IntEnum):
 class SystemManagerType(Enum):
     sysv = 0
     systemd = 1
+
+
+def get_distro():
+    output = TestRun.executor.run(
+        "cat /etc/os-release | grep -e \"^ID=\" | awk -F= '{print$2}' | tr -d '\"'"
+    ).stdout.lower()
+
+    try:
+        return Distro(output)
+    except ValueError:
+        raise ValueError(f"Could not resolve distro name. Command output: {output}")
 
 
 def get_system_manager():
