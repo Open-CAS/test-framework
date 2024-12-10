@@ -56,8 +56,9 @@ class PowerControlPlugin:
 
     def parse_virsh_config(self, vm_name, reboot_timeout=DEFAULT_REBOOT_TIMEOUT) -> dict | None:
         if not self.check_if_vm_exists(vm_name=vm_name):
-            raise ValueError(f"Virsh power plugin error: couldn't find VM {vm_name} on host "
-                             f"{self.host}")
+            raise ValueError(
+                f"Virsh power plugin error: couldn't find VM {vm_name} on host " f"{self.host}"
+            )
         return {
             "vm_name": vm_name,
             "reboot_timeout": reboot_timeout,
