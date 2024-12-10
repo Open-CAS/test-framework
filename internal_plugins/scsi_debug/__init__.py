@@ -7,7 +7,7 @@ from time import sleep
 from core.test_run_utils import TestRun
 from storage_devices.device import Device
 from test_utils import os_utils
-from test_utils.output import CmdException
+from connection.utils.output import CmdException
 
 
 class ScsiDebug:

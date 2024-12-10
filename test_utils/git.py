@@ -9,7 +9,7 @@ import posixpath
 
 from core.test_run import TestRun
 from connection.local_executor import LocalExecutor
-from test_utils.output import CmdException
+from connection.utils.output import CmdException
 
 
 def __get_executor_and_repo_path(from_dut):

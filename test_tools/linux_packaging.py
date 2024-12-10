@@ -9,7 +9,7 @@ import os
 import re
 
 from core.test_run import TestRun
-from test_utils.output import CmdException
+from connection.utils.output import CmdException
 
 
 class RpmSet:

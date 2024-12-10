@@ -15,7 +15,7 @@ import portalocker
 from log.html_log_config import HtmlLogConfig
 from log.html_log_manager import HtmlLogManager
 from log.html_presentation_policy import html_policy
-from test_utils.output import Output
+from connection.utils.output import Output
 from test_utils.singleton import Singleton
 
 

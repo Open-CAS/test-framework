@@ -13,7 +13,7 @@ import paramiko
 
 from connection.base_executor import BaseExecutor
 from core.test_run import TestRun, Blocked
-from test_utils.output import Output
+from connection.utils.output import Output
 
 
 class SshExecutor(BaseExecutor):

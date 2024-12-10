@@ -13,7 +13,7 @@ import test_tools.fs_utils
 from core.test_run import TestRun
 from test_tools import fs_utils
 from test_utils import os_utils
-from test_utils.output import CmdException
+from connection.utils.output import CmdException
 
 
 class Fio:

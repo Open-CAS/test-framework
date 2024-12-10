@@ -9,7 +9,7 @@ from core.test_run import TestRun
 from test_tools import disk_utils
 from test_tools.fs_utils import check_if_file_exists, readlink
 from test_utils import os_utils
-from test_utils.output import CmdException
+from connection.utils.output import CmdException
 
 
 def find_disks():
