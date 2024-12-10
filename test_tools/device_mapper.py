@@ -8,7 +8,7 @@ from enum import Enum
 
 from core.test_run import TestRun
 from storage_devices.device import Device
-from test_utils.linux_command import LinuxCommand
+from test_tools.common.linux_command import LinuxCommand
 from types.size import Size, Unit
 
 

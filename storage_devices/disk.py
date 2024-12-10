@@ -14,7 +14,7 @@ from core.test_run import TestRun
 from storage_devices.device import Device
 from test_tools import disk_utils, fs_utils, nvme_cli
 from test_utils import disk_finder
-from test_utils.os_utils import wait
+from test_tools.common.wait import wait
 from connection.utils.output import Output
 from types.size import Unit
 

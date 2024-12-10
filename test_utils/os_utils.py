@@ -9,7 +9,7 @@ import posixpath
 import re
 import time
 
-from datetime import timedelta, datetime
+from datetime import timedelta
 from enum import IntFlag, Enum, IntEnum, StrEnum
 from packaging import version
 from typing import List
@@ -420,18 +420,6 @@ def kill_all_io(graceful=True):
         raise Exception(f"Failed to stop blktrace!")
     if TestRun.executor.run("pgrep vdbench").exit_code == 0:
         raise Exception(f"Failed to stop vdbench!")
-
-
-def wait(predicate, timeout: timedelta, interval: timedelta = None):
-    start_time = datetime.now()
-    result = False
-    while start_time + timeout > datetime.now():
-        result = predicate()
-        if result:
-            break
-        if interval is not None:
-            time.sleep(interval.total_seconds())
-    return result
 
 
 def sync():
