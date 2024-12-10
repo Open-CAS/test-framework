@@ -97,14 +97,10 @@ def get_commit_hash(version, from_dut: bool = False):
     return output.stdout
 
 
-def get_release_tags(forbidden_characters: list = None):
+def get_tags():
     repo_path = os.path.join(TestRun.usr.working_dir, ".git")
     output = TestRun.executor.run_expect_success(f"git --git-dir={repo_path} tag").stdout
-
-    if not forbidden_characters:
-        return output.splitlines()
-    else:
-        return [v for v in output.splitlines() if all(c not in v for c in forbidden_characters)]
+    return output.splitlines()
 
 
 def checkout_version(version):
