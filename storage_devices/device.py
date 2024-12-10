@@ -9,7 +9,7 @@ from core.test_run import TestRun
 from test_tools import disk_utils, fs_utils
 from test_tools.disk_utils import get_device_filesystem_type, get_sysfs_path
 from test_utils.io_stats import IoStats
-from test_utils.size import Size, Unit
+from types.size import Size, Unit
 
 
 class Device:

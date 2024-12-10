@@ -5,7 +5,7 @@
 
 from storage_devices.device import Device
 from test_tools import disk_utils
-from test_utils.size import Size
+from types.size import Size
 
 
 class Partition(Device):

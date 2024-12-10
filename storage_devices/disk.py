@@ -16,7 +16,7 @@ from test_tools import disk_utils, fs_utils, nvme_cli
 from test_utils import disk_finder
 from test_utils.os_utils import wait
 from test_utils.output import Output
-from test_utils.size import Unit
+from types.size import Unit
 
 
 class DiskType(IntEnum):

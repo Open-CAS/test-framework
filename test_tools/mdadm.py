@@ -7,7 +7,7 @@
 import re
 
 from core.test_run import TestRun
-from test_utils.size import Unit
+from types.size import Unit
 from test_utils.os_utils import Udev
 
 

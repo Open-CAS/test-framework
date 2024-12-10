@@ -11,7 +11,7 @@ from test_tools import disk_utils
 from test_tools.fs_utils import ls, parse_ls_output
 from test_utils.filesystem.symlink import Symlink
 from test_utils.os_utils import reload_kernel_module, unload_kernel_module, is_kernel_module_loaded
-from test_utils.size import Size, Unit
+from types.size import Size, Unit
 
 
 class RamDisk(Device):

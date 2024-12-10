@@ -15,7 +15,7 @@ from aenum import IntFlag, Enum
 
 from core.test_run import TestRun
 from test_tools.dd import Dd
-from test_utils.size import Size, Unit
+from types.size import Size, Unit
 
 
 class Permissions(IntFlag):

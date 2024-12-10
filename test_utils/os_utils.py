@@ -22,7 +22,7 @@ from test_tools.fs_utils import check_if_directory_exists, create_directory, che
 from test_utils.filesystem.file import File
 from test_utils.output import CmdException
 from test_utils.retry import Retry
-from test_utils.size import Size, Unit
+from types.size import Size, Unit
 
 DEBUGFS_MOUNT_POINT = "/sys/kernel/debug"
 MEMORY_MOUNT_POINT = "/mnt/memspace"

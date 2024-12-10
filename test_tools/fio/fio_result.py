@@ -4,7 +4,7 @@
 #
 
 
-from test_utils.size import Size, Unit, UnitPerSecond
+from types.size import Size, Unit, UnitPerSecond
 from test_utils.time import Time
 
 
