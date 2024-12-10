@@ -6,7 +6,7 @@
 from core.test_run import TestRun
 from storage_devices.device import Device
 from types.size import Size, Unit, UnitPerSecond
-from test_utils.time import Time
+from types.time import Time
 import csv
 
 

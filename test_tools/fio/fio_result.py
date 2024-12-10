@@ -5,7 +5,7 @@
 
 
 from types.size import Size, Unit, UnitPerSecond
-from test_utils.time import Time
+from types.time import Time
 
 
 class FioResult:
