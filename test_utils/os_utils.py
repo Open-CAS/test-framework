@@ -21,7 +21,7 @@ from test_tools.disk_utils import get_sysfs_path
 from test_tools.fs_utils import check_if_directory_exists, create_directory, check_if_file_exists
 from test_utils.filesystem.file import File
 from connection.utils.output import CmdException
-from test_utils.retry import Retry
+from connection.utils.retry import Retry
 from types.size import Size, Unit
 
 DEBUGFS_MOUNT_POINT = "/sys/kernel/debug"
