@@ -11,7 +11,7 @@ from storage_devices.disk import Disk
 from test_tools.fs_utils import readlink
 from test_tools.mdadm import Mdadm
 from test_tools.disk_finder import resolve_to_by_id_link
-from types.size import Size, Unit
+from type_def.size import Size, Unit
 
 
 def get_devices_paths_string(devices: [Device]):

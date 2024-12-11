@@ -8,7 +8,7 @@ from datetime import timedelta
 from test_tools import fs_utils
 from test_tools.dd import Dd
 from test_utils.filesystem.fs_item import FsItem
-from types.size import Size
+from type_def.size import Size
 
 
 class File(FsItem):

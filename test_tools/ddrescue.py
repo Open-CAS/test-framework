@@ -4,7 +4,7 @@
 #
 
 import test_tools.common.linux_command as linux_comm
-import types.size as size
+import type_def.size as size
 from core.test_run import TestRun
 
 

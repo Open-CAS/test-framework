@@ -16,7 +16,7 @@ from test_tools import disk_utils, fs_utils, nvme_cli
 from test_tools.common.wait import wait
 from connection.utils.output import Output
 from test_tools.disk_finder import get_block_devices_list, resolve_to_by_id_link
-from types.size import Unit
+from type_def.size import Unit
 
 
 class DiskType(IntEnum):

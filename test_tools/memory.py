@@ -6,7 +6,7 @@ from test_tools.dd import Dd
 from test_tools.fs_utils import check_if_directory_exists, create_directory
 from test_tools.os_tools import OvercommitMemoryMode, drop_caches, DropCachesMode, \
     MEMORY_MOUNT_POINT, is_mounted
-from types.size import Size, Unit
+from type_def.size import Size, Unit
 
 
 def disable_memory_affecting_functions():

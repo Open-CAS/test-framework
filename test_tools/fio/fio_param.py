@@ -14,7 +14,7 @@ from core.test_run import TestRun
 from storage_devices.device import Device
 from test_tools.fio.fio_result import FioResult
 from test_tools.common.linux_command import LinuxCommand
-from types.size import Size
+from type_def.size import Size
 
 
 class CpusAllowedPolicy(Enum):
