@@ -19,7 +19,7 @@ from core.pair_testing import generate_pair_testing_testcases, register_testcase
 from core.plugins import PluginManager
 from log.base_log import BaseLogResult
 from storage_devices.disk import Disk
-from test_utils import disk_finder
+from test_tools import disk_finder
 from test_utils.dut import Dut
 
 TestRun = core.test_run.TestRun

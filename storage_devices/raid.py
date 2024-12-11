@@ -10,7 +10,7 @@ from storage_devices.device import Device
 from storage_devices.disk import Disk
 from test_tools.fs_utils import readlink
 from test_tools.mdadm import Mdadm
-from test_utils.disk_finder import resolve_to_by_id_link
+from test_tools.disk_finder import resolve_to_by_id_link
 from types.size import Size, Unit
 
 

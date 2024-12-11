@@ -7,7 +7,7 @@
 from core.test_run import TestRun
 from storage_devices.device import Device
 from test_tools.device_mapper import DmTable, DeviceMapper
-from test_utils.disk_finder import resolve_to_by_id_link
+from test_tools.disk_finder import resolve_to_by_id_link
 
 
 class ErrorDevice(Device):

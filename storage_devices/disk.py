@@ -13,9 +13,9 @@ from enum import IntEnum
 from core.test_run import TestRun
 from storage_devices.device import Device
 from test_tools import disk_utils, fs_utils, nvme_cli
-from test_utils import disk_finder
 from test_tools.common.wait import wait
 from connection.utils.output import Output
+from test_tools.disk_finder import get_block_devices_list, resolve_to_by_id_link
 from types.size import Unit
 
 
@@ -159,7 +159,7 @@ class Disk(Device):
 
     def is_detected(self):
         if self.serial_number:
-            serial_numbers = disk_finder.get_all_serial_numbers()
+            serial_numbers = Disk.get_all_serial_numbers()
             return self.serial_number in serial_numbers
         elif self.path:
             output = fs_utils.ls_item(f"{self.path}")
@@ -213,6 +213,40 @@ class Disk(Device):
     def plug_all_disks(cls):
         for disk_type in cls.types_registry:
             disk_type.plug_all()
+
+    @staticmethod
+    def get_all_serial_numbers():
+        serial_numbers = {}
+        block_devices = get_block_devices_list()
+        for dev in block_devices:
+            serial = Disk.get_disk_serial_number(dev)
+            try:
+                path = resolve_to_by_id_link(dev)
+            except Exception:
+                continue
+            if serial:
+                serial_numbers[serial] = path
+            else:
+                TestRun.LOGGER.warning(f"Device {path} ({dev}) does not have a serial number.")
+                serial_numbers[path] = path
+        return serial_numbers
+
+    @staticmethod
+    def get_disk_serial_number(dev_path):
+        commands = [
+            f"(udevadm info --query=all --name={dev_path} | grep 'SCSI.*_SERIAL' || "
+            f"udevadm info --query=all --name={dev_path} | grep 'ID_SERIAL_SHORT') | "
+            "awk -F '=' '{print $NF}'",
+            f"sg_inq {dev_path} 2> /dev/null | grep '[Ss]erial number:' | "
+            "awk '{print $NF}'",
+            f"udevadm info --query=all --name={dev_path} | grep 'ID_SERIAL' | "
+            "awk -F '=' '{print $NF}'"
+        ]
+        for command in commands:
+            serial = TestRun.executor.run(command).stdout
+            if serial:
+                return serial.split('\n')[0]
+        return None
 
 
 @static_init

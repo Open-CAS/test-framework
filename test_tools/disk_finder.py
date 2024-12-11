@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 import os
@@ -103,40 +104,6 @@ def discover_ssd_devices(block_devices, devices_res):
             block_devices.remove(dev)
 
 
-def get_disk_serial_number(dev_path):
-    commands = [
-        f"(udevadm info --query=all --name={dev_path} | grep 'SCSI.*_SERIAL' || "
-        f"udevadm info --query=all --name={dev_path} | grep 'ID_SERIAL_SHORT') | "
-        "awk -F '=' '{print $NF}'",
-        f"sg_inq {dev_path} 2> /dev/null | grep '[Ss]erial number:' | "
-        "awk '{print $NF}'",
-        f"udevadm info --query=all --name={dev_path} | grep 'ID_SERIAL' | "
-        "awk -F '=' '{print $NF}'"
-    ]
-    for command in commands:
-        serial = TestRun.executor.run(command).stdout
-        if serial:
-            return serial.split('\n')[0]
-    return None
-
-
-def get_all_serial_numbers():
-    serial_numbers = {}
-    block_devices = get_block_devices_list()
-    for dev in block_devices:
-        serial = get_disk_serial_number(dev)
-        try:
-            path = resolve_to_by_id_link(dev)
-        except Exception:
-            continue
-        if serial:
-            serial_numbers[serial] = path
-        else:
-            TestRun.LOGGER.warning(f"Device {path} ({dev}) does not have a serial number.")
-            serial_numbers[path] = path
-    return serial_numbers
-
-
 def get_system_disks():
     system_device = TestRun.executor.run_expect_success('mount | grep " / "').stdout.split()[0]
     readlink_output = readlink(system_device)
@@ -176,7 +143,9 @@ def __get_slaves(device_name: str):
 
 def resolve_to_by_id_link(path):
     by_id_paths = TestRun.executor.run_expect_success("ls /dev/disk/by-id -1").stdout.splitlines()
-    dev_full_paths = [posixpath.join("/dev/disk/by-id", by_id_path) for by_id_path in by_id_paths]
+    dev_full_paths = [
+        posixpath.join("/dev/disk/by-id", by_id_path) for by_id_path in by_id_paths
+    ]
 
     for full_path in dev_full_paths:
         # handle exception for broken links
