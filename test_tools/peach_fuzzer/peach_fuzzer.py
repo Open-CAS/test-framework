@@ -12,10 +12,10 @@ import tempfile
 import lxml.etree as etree
 from collections import namedtuple
 
+import test_tools.wget
 from core.test_run import TestRun
 from test_tools import fs_utils
 from test_tools.fs_utils import create_directory, check_if_file_exists, write_file
-from test_utils import os_utils
 
 
 class PeachFuzzer:
@@ -155,7 +155,7 @@ class PeachFuzzer:
         Install Peach Fuzzer on the DUT
         """
         create_directory(cls.base_dir, True)
-        peach_archive = os_utils.download_file(
+        peach_archive = test_tools.wget.download_file(
             cls.peach_fuzzer_3_0_url, destination_dir=cls.base_dir
         )
         TestRun.executor.run_expect_success(

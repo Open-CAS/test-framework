@@ -2,13 +2,13 @@
 # Copyright(c) 2019-2021 Intel Corporation
 # SPDX-License-Identifier: BSD-3-Clause
 #
-
+import os
 import posixpath
 
 from core.test_run import TestRun
 from test_tools import disk_utils
+from test_tools.disk_utils import get_sysfs_path
 from test_tools.fs_utils import check_if_file_exists, readlink
-from test_utils import os_utils
 from connection.utils.output import CmdException
 
 
@@ -141,14 +141,13 @@ def get_system_disks():
     system_device = TestRun.executor.run_expect_success('mount | grep " / "').stdout.split()[0]
     readlink_output = readlink(system_device)
     device_name = readlink_output.split('/')[-1]
-    sys_block_path = os_utils.get_sys_block_path()
     used_device_names = __get_slaves(device_name)
     if not used_device_names:
         used_device_names = [device_name]
     disk_names = []
     for device_name in used_device_names:
-        if check_if_file_exists(f'{sys_block_path}/{device_name}/partition'):
-            parent_device = readlink(f'{sys_block_path}/{device_name}/..').split('/')[-1]
+        if check_if_file_exists(os.path.join(get_sysfs_path(device_name), "partition")):
+            parent_device = readlink(os.path.join(get_sysfs_path(device_name), "..")).split('/')[-1]
             disk_names.append(parent_device)
         else:
             disk_names.append(device_name)
@@ -159,7 +158,7 @@ def get_system_disks():
 def __get_slaves(device_name: str):
     try:
         device_names = TestRun.executor.run_expect_success(
-            f'ls {os_utils.get_sys_block_path()}/{device_name}/slaves').stdout.splitlines()
+            f"ls {os.path.join(get_sysfs_path(device_name), "slaves")}").stdout.splitlines()
     except CmdException as e:
         if "No such file or directory" not in e.output.stderr:
             raise

@@ -8,6 +8,7 @@ import posixpath
 import re
 import time
 from enum import Enum
+from typing import List
 
 from core.test_run import TestRun
 from test_tools import fs_utils
@@ -266,7 +267,7 @@ def get_first_partition_offset(device, aligned: bool):
 
 
 def remove_partitions(device):
-    from test_utils.os_utils import Udev
+    from test_tools.udev import Udev
     if device.is_mounted():
         device.unmount()
 
@@ -406,3 +407,13 @@ def validate_dev_path(path: str):
         return path
 
     raise ValueError(f'By-id device link {path} is broken.')
+
+
+def get_block_device_names_list(exclude_list: List[int] = None) -> List[str]:
+    cmd = "lsblk -lo NAME"
+    if exclude_list is not None:
+        cmd += f" -e {','.join(str(type_id) for type_id in exclude_list)}"
+    devices = TestRun.executor.run_expect_success(cmd).stdout
+    devices_list = devices.splitlines()
+    devices_list.sort()
+    return devices_list

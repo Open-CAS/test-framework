@@ -6,8 +6,8 @@ from time import sleep
 
 from core.test_run_utils import TestRun
 from storage_devices.device import Device
-from test_utils import os_utils
 from connection.utils.output import CmdException
+from test_tools.os_tools import load_kernel_module, is_kernel_module_loaded, unload_kernel_module
 
 
 class ScsiDebug:
@@ -24,7 +24,7 @@ class ScsiDebug:
     def reload(self):
         self.teardown()
         sleep(1)
-        load_output = os_utils.load_kernel_module(self.module_name, self.params)
+        load_output = load_kernel_module(self.module_name, self.params)
         if load_output.exit_code != 0:
             raise CmdException(f"Failed to load {self.module_name} module", load_output)
         TestRun.LOGGER.info(f"{self.module_name} loaded successfully.")
@@ -32,8 +32,8 @@ class ScsiDebug:
         TestRun.scsi_debug_devices = Device.get_scsi_debug_devices()
 
     def teardown(self):
-        if os_utils.is_kernel_module_loaded(self.module_name):
-            os_utils.unload_kernel_module(self.module_name)
+        if is_kernel_module_loaded(self.module_name):
+            unload_kernel_module(self.module_name)
 
 
 plugin_class = ScsiDebug

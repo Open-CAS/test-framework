@@ -8,7 +8,7 @@ import re
 
 from core.test_run import TestRun
 from types.size import Unit
-from test_utils.os_utils import Udev
+from test_tools.udev import Udev
 
 
 class Mdadm:

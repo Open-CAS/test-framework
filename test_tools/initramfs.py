@@ -4,7 +4,7 @@
 #
 
 from core.test_run import TestRun
-from test_utils.os_utils import get_distro, Distro
+from test_tools.os_tools import get_distro, Distro
 
 
 def update():

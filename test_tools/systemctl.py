@@ -23,3 +23,13 @@ def reload_daemon():
 
 def restart_service(name):
     TestRun.executor.run_expect_success(f"systemctl restart {name}")
+
+
+def get_service_path(unit_name):
+    cmd = f"systemctl cat {unit_name}"
+
+    # path is in second column of first line of output
+    info = TestRun.executor.run_expect_success(cmd).stdout
+    path = info.splitlines()[0].split()[1]
+
+    return path
