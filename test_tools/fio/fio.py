@@ -9,10 +9,10 @@ import uuid
 
 from packaging.version import Version
 import test_tools.fio.fio_param
-import test_tools.fs_utils
+import test_tools.fs_tools
 import test_tools.wget
 from core.test_run import TestRun
-from test_tools import fs_utils
+from test_tools import fs_tools
 from connection.utils.output import CmdException
 
 
@@ -51,7 +51,7 @@ class Fio:
     def install(self):
         fio_url = f"http://brick.kernel.dk/snaps/fio-{self.min_fio_version}.tar.bz2"
         fio_package = test_tools.wget.download_file(fio_url)
-        fs_utils.uncompress_archive(fio_package)
+        fs_tools.uncompress_archive(fio_package)
         TestRun.executor.run_expect_success(
             f"cd {fio_package.parent_dir}/fio-{self.min_fio_version}"
             f" && ./configure && make -j && make install"

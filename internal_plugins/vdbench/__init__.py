@@ -9,7 +9,7 @@ import posixpath
 
 from datetime import timedelta
 from core.test_run import TestRun
-from test_tools import fs_utils
+from test_tools import fs_tools
 
 
 class Vdbench:

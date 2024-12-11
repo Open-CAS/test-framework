@@ -188,7 +188,7 @@ class Log(HtmlLogManager, metaclass=Singleton):
 
     def get_additional_logs(self):
         from core.test_run import TestRun
-        from test_tools.fs_utils import check_if_file_exists
+        from test_tools.fs_tools import check_if_file_exists
         messages_log = "/var/log/messages"
         if not check_if_file_exists(messages_log):
             messages_log = "/var/log/syslog"

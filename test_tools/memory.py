@@ -3,9 +3,9 @@ import math
 from connection.utils.output import CmdException
 from core.test_run import TestRun
 from test_tools.dd import Dd
-from test_tools.fs_utils import check_if_directory_exists, create_directory
+from test_tools.fs_tools import check_if_directory_exists, create_directory, is_mounted
 from test_tools.os_tools import OvercommitMemoryMode, drop_caches, DropCachesMode, \
-    MEMORY_MOUNT_POINT, is_mounted
+    MEMORY_MOUNT_POINT
 from type_def.size import Size, Unit
 
 

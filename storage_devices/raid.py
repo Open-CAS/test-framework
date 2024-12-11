@@ -8,7 +8,7 @@ from enum import IntEnum, Enum
 from core.test_run import TestRun
 from storage_devices.device import Device
 from storage_devices.disk import Disk
-from test_tools.fs_utils import readlink
+from test_tools.fs_tools import readlink
 from test_tools.mdadm import Mdadm
 from test_tools.disk_finder import resolve_to_by_id_link
 from type_def.size import Size, Unit

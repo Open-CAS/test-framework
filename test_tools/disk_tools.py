@@ -10,20 +10,15 @@ import time
 from enum import Enum
 from typing import List
 
+import test_tools.fs_tools
 from core.test_run import TestRun
-from test_tools import fs_utils
 from test_tools.dd import Dd
-from test_tools.fs_utils import readlink, parse_ls_output, ls
-from connection.utils.output import CmdException
+from test_tools.fs_tools import readlink, parse_ls_output, ls, check_if_directory_exists, \
+    create_directory, wipe_filesystem
+from test_tools.udev import Udev
 from type_def.size import Size, Unit
 
 SECTOR_SIZE = 512
-
-
-class Filesystem(Enum):
-    xfs = 0
-    ext3 = 1
-    ext4 = 2
 
 
 class PartitionTable(Enum):
@@ -41,21 +36,6 @@ class PartitionType(Enum):
     swap = 6
     standard = 7
     unknown = 8
-
-
-def create_filesystem(device, filesystem: Filesystem, force=True, blocksize=None):
-    TestRun.LOGGER.info(
-        f"Creating filesystem ({filesystem.name}) on device: {device.path}")
-    force_param = ' -f ' if filesystem == Filesystem.xfs else ' -F '
-    force_param = force_param if force else ''
-    block_size_param = f' -b size={blocksize}' if filesystem == Filesystem.xfs \
-        else f' -b {blocksize}'
-    block_size_param = block_size_param if blocksize else ''
-    cmd = f'mkfs.{filesystem.name} {force_param} {device.path} {block_size_param}'
-    cmd = re.sub(' +', ' ', cmd)
-    TestRun.executor.run_expect_success(cmd)
-    TestRun.LOGGER.info(
-        f"Successfully created filesystem on device: {device.path}")
 
 
 def create_partition_table(device, partition_table_type: PartitionTable = PartitionTable.gpt):
@@ -267,8 +247,7 @@ def get_first_partition_offset(device, aligned: bool):
 
 
 def remove_partitions(device):
-    from test_tools.udev import Udev
-    if device.is_mounted():
+    if test_tools.fs_tools.is_mounted(device.path):
         device.unmount()
 
     for partition in device.partitions:
@@ -276,7 +255,7 @@ def remove_partitions(device):
 
     TestRun.LOGGER.info(f"Removing partitions from device: {device.path} "
                         f"({device.get_device_id()}).")
-    device.wipe_filesystem()
+    wipe_filesystem(device)
     Udev.trigger()
     Udev.settle()
     output = TestRun.executor.run(f"ls {device.path}* -1")
@@ -287,8 +266,8 @@ def remove_partitions(device):
 
 
 def mount(device, mount_point, options: [str] = None):
-    if not fs_utils.check_if_directory_exists(mount_point):
-        fs_utils.create_directory(mount_point, True)
+    if not check_if_directory_exists(mount_point):
+        create_directory(mount_point, True)
     TestRun.LOGGER.info(f"Mounting device {device.path} ({device.get_device_id()}) "
                         f"to {mount_point}.")
     cmd = f"mount {device.path} {mount_point}"
@@ -330,15 +309,6 @@ def unit_to_string(unit):
     return unit_string.get(unit, "Invalid unit.")
 
 
-def wipe_filesystem(device, force=True):
-    TestRun.LOGGER.info(f"Erasing the device: {device.path}")
-    force_param = ' -f' if force else ''
-    cmd = f'wipefs -a{force_param} {device.path}'
-    TestRun.executor.run_expect_success(cmd)
-    TestRun.LOGGER.info(
-        f"Successfully wiped device: {device.path}")
-
-
 def check_if_device_supports_trim(device):
     if device.get_device_id().startswith("nvme"):
         return True
@@ -349,27 +319,6 @@ def check_if_device_supports_trim(device):
         f"lsblk -dn {device.path} -o DISC-MAX | grep -o \'[0-9]\\+\'"
     )
     return int(command_output.stdout) > 0
-
-
-def get_device_filesystem_type(device_id):
-    cmd = f'lsblk -l -o NAME,FSTYPE | sort | uniq | grep "{device_id} "'
-    try:
-        stdout = TestRun.executor.run_expect_success(cmd).stdout
-    except CmdException:
-        # unusual devices might not be listed in output (i.e. RAID containers)
-        if TestRun.executor.run(f"test -b /dev/{device_id}").exit_code != 0:
-            raise
-        else:
-            return None
-    split_stdout = stdout.strip().split()
-    if len(split_stdout) <= 1:
-        return None
-    else:
-        try:
-            return Filesystem[split_stdout[1]]
-        except KeyError:
-            TestRun.LOGGER.warning(f"Unrecognized filesystem: {split_stdout[1]}")
-            return None
 
 
 def _is_by_id_path(path: str):

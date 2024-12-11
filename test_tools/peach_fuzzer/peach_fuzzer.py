@@ -14,8 +14,8 @@ from collections import namedtuple
 
 import test_tools.wget
 from core.test_run import TestRun
-from test_tools import fs_utils
-from test_tools.fs_utils import create_directory, check_if_file_exists, write_file
+from test_tools import fs_tools
+from test_tools.fs_tools import create_directory, check_if_file_exists, write_file
 
 
 class PeachFuzzer:
@@ -75,7 +75,7 @@ class PeachFuzzer:
             cls._install()
         if not cls._is_xml_config_prepared():
             TestRun.block("No Peach Fuzzer XML config needed to generate fuzzed values was found!")
-        fs_utils.remove(cls.fuzzy_output_file, force=True, ignore_errors=True)
+        fs_tools.remove(cls.fuzzy_output_file, force=True, ignore_errors=True)
         TestRun.LOGGER.info(f"Generate {count} unique fuzzed values")
         cmd = f"cd {cls.base_dir}; {cls.peach_dir}/peach --range 0,{count - 1} " \
               f"--seed {random.randrange(2 ** 32)} {cls.xml_config_file} > " \
@@ -172,7 +172,7 @@ class PeachFuzzer:
         """
         if not cls._is_mono_installed():
             TestRun.block("Mono is not installed, can't continue with Peach Fuzzer!")
-        if fs_utils.check_if_directory_exists(posixpath.join(cls.base_dir, cls.peach_dir)):
+        if fs_tools.check_if_directory_exists(posixpath.join(cls.base_dir, cls.peach_dir)):
             return "Peach" in TestRun.executor.run(
                 f"cd {cls.base_dir} && {cls.peach_dir}/peach --version").stdout.strip()
         else:
@@ -197,7 +197,7 @@ class PeachFuzzer:
         """
         Check if Peach Fuzzer XML config is present on the DUT
         """
-        if fs_utils.check_if_file_exists(cls.xml_config_file):
+        if fs_tools.check_if_file_exists(cls.xml_config_file):
             return True
         else:
             return False

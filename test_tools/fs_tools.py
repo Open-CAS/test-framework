@@ -7,15 +7,22 @@
 
 import base64
 import math
+import re
 import textwrap
 from collections import namedtuple
 from datetime import datetime, timedelta
+from enum import Enum, IntFlag
 
-from aenum import IntFlag, Enum
-
+from connection.utils.output import CmdException
 from core.test_run import TestRun
 from test_tools.dd import Dd
 from type_def.size import Size, Unit
+
+
+class Filesystem(Enum):
+    xfs = 0
+    ext3 = 1
+    ext4 = 2
 
 
 class Permissions(IntFlag):
@@ -50,7 +57,7 @@ class PermissionSign(Enum):
     set = '='
 
 
-class FilesPermissions():
+class FilesPermissions:
     perms_exceptions = {}
 
     def __init__(self, files_list: list):
@@ -393,3 +400,55 @@ def create_random_test_file(target_file_path: str,
     dd.run()
     file.refresh_item()
     return file
+
+
+def create_filesystem(device, filesystem: Filesystem, force=True, blocksize=None):
+    TestRun.LOGGER.info(
+        f"Creating filesystem ({filesystem.name}) on device: {device.path}")
+    force_param = ' -f ' if filesystem == Filesystem.xfs else ' -F '
+    force_param = force_param if force else ''
+    block_size_param = f' -b size={blocksize}' if filesystem == Filesystem.xfs \
+        else f' -b {blocksize}'
+    block_size_param = block_size_param if blocksize else ''
+    cmd = f'mkfs.{filesystem.name} {force_param} {device.path} {block_size_param}'
+    cmd = re.sub(' +', ' ', cmd)
+    TestRun.executor.run_expect_success(cmd)
+    TestRun.LOGGER.info(
+        f"Successfully created filesystem on device: {device.path}")
+
+
+def wipe_filesystem(device, force=True):
+    TestRun.LOGGER.info(f"Erasing the device: {device.path}")
+    force_param = ' -f' if force else ''
+    cmd = f'wipefs -a{force_param} {device.path}'
+    TestRun.executor.run_expect_success(cmd)
+    TestRun.LOGGER.info(
+        f"Successfully wiped device: {device.path}")
+
+
+def get_device_filesystem_type(device_id):
+    cmd = f'lsblk -l -o NAME,FSTYPE | sort | uniq | grep "{device_id} "'
+    try:
+        stdout = TestRun.executor.run_expect_success(cmd).stdout
+    except CmdException:
+        # unusual devices might not be listed in output (i.e. RAID containers)
+        if TestRun.executor.run(f"test -b /dev/{device_id}").exit_code != 0:
+            raise
+        else:
+            return None
+    split_stdout = stdout.strip().split()
+    if len(split_stdout) <= 1:
+        return None
+    else:
+        try:
+            return Filesystem[split_stdout[1]]
+        except KeyError:
+            TestRun.LOGGER.warning(f"Unrecognized filesystem: {split_stdout[1]}")
+            return None
+
+
+def is_mounted(path: str):
+    if path is None or path.isspace():
+        raise Exception("Checked path cannot be empty")
+    command = f"mount | grep --fixed-strings '{path.rstrip('/')} '"
+    return TestRun.executor.run(command).exit_code == 0

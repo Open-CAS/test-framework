@@ -9,7 +9,7 @@ from datetime import timedelta
 
 from connection.base_executor import BaseExecutor
 from core.test_run import TestRun
-from test_tools.fs_utils import copy
+from test_tools.fs_tools import copy
 from connection.utils.output import Output, CmdException
 
 

@@ -7,9 +7,9 @@ import os
 import posixpath
 
 from core.test_run import TestRun
-from test_tools import disk_utils
-from test_tools.disk_utils import get_sysfs_path
-from test_tools.fs_utils import check_if_file_exists, readlink
+from test_tools import disk_tools
+from test_tools.disk_tools import get_sysfs_path
+from test_tools.fs_tools import check_if_file_exists, readlink
 from connection.utils.output import CmdException
 
 
@@ -50,7 +50,7 @@ def discover_hdd_devices(block_devices, devices_res):
     for dev in block_devices:
         if TestRun.executor.run_expect_success(f"cat /sys/block/{dev}/removable").stdout == "1":
             continue  # skip removable drives
-        block_size = disk_utils.get_block_size(dev)
+        block_size = disk_tools.get_block_size(dev)
         if int(block_size) == 4096:
             disk_type = 'hdd4k'
         else:
@@ -62,7 +62,7 @@ def discover_hdd_devices(block_devices, devices_res):
                 f"sg_inq /dev/{dev} | grep -i 'serial number'"
             ).stdout.split(': ')[1].strip(),
             "blocksize": block_size,
-            "size": disk_utils.get_size(dev)})
+            "size": disk_tools.get_size(dev)})
     block_devices.clear()
 
 
@@ -99,8 +99,8 @@ def discover_ssd_devices(block_devices, devices_res):
                 "type": disk_type,
                 "path": resolve_to_by_id_link(device_path),
                 "serial": serial_number,
-                "blocksize": disk_utils.get_block_size(dev),
-                "size": disk_utils.get_size(dev)})
+                "blocksize": disk_tools.get_block_size(dev),
+                "size": disk_tools.get_size(dev)})
             block_devices.remove(dev)
 
 

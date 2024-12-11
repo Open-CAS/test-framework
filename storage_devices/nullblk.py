@@ -5,7 +5,7 @@
 
 from core.test_run import TestRun
 from storage_devices.device import Device
-from test_tools.fs_utils import ls, parse_ls_output
+from test_tools.fs_tools import ls, parse_ls_output
 from test_tools.os_tools import (
     unload_kernel_module,
     is_kernel_module_loaded,

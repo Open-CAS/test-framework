@@ -10,9 +10,10 @@ import re
 from datetime import timedelta
 from enum import IntEnum
 
+import test_tools.fs_tools
 from core.test_run import TestRun
 from storage_devices.device import Device
-from test_tools import disk_utils, fs_utils, nvme_cli
+from test_tools import disk_tools, fs_tools, nvme_cli
 from test_tools.common.wait import wait
 from connection.utils.output import Output
 from test_tools.disk_finder import get_block_devices_list, resolve_to_by_id_link
@@ -137,24 +138,24 @@ class Disk(Device):
             )
         return recognized_types[0]
 
-    def create_partitions(self, sizes: [], partition_table_type=disk_utils.PartitionTable.gpt):
-        disk_utils.create_partitions(self, sizes, partition_table_type)
+    def create_partitions(self, sizes: [], partition_table_type=disk_tools.PartitionTable.gpt):
+        disk_tools.create_partitions(self, sizes, partition_table_type)
 
     def remove_partition(self, part):
         part_number = int(part.path.split("part")[1])
-        disk_utils.remove_parition(self, part_number)
+        disk_tools.remove_parition(self, part_number)
         self.partitions.remove(part)
 
     def umount_all_partitions(self):
         TestRun.LOGGER.info(f"Unmounting all partitions from: {self.path}")
-        cmd = f"umount -l {fs_utils.readlink(self.path)}*?"
+        cmd = f"umount -l {fs_tools.readlink(self.path)}*?"
         TestRun.executor.run(cmd)
 
     def remove_partitions(self):
         for part in self.partitions:
-            if part.is_mounted():
+            if test_tools.fs_tools.is_mounted(part.path):
                 part.unmount()
-        if disk_utils.remove_partitions(self):
+        if disk_tools.remove_partitions(self):
             self.partitions.clear()
 
     def is_detected(self):
@@ -162,8 +163,8 @@ class Disk(Device):
             serial_numbers = Disk.get_all_serial_numbers()
             return self.serial_number in serial_numbers
         elif self.path:
-            output = fs_utils.ls_item(f"{self.path}")
-            return fs_utils.parse_ls_output(output)[0] is not None
+            output = fs_tools.ls_item(f"{self.path}")
+            return fs_tools.parse_ls_output(output)[0] is not None
         raise Exception("Couldn't check if device is detected by the system")
 
     def wait_for_plug_status(self, should_be_visible):
@@ -289,8 +290,8 @@ class NvmeDisk(Disk):
         base = f"/sys/block/{device_id}/device"
         for suffix in ["/remove", "/device/remove"]:
             try:
-                output = fs_utils.ls_item(base + suffix)
-                fs_utils.parse_ls_output(output)[0]
+                output = fs_tools.ls_item(base + suffix)
+                fs_tools.parse_ls_output(output)[0]
             except TypeError:
                 continue
             return base + suffix
@@ -345,8 +346,8 @@ class SataDisk(Disk):
     @staticmethod
     def get_sysfs_addr(device_id):
         ls_command = f"$(find -H /sys/devices/ -name {device_id} -type d)"
-        output = fs_utils.ls_item(f"{ls_command}")
-        sysfs_addr = fs_utils.parse_ls_output(output)[0]
+        output = fs_tools.ls_item(f"{ls_command}")
+        sysfs_addr = fs_tools.parse_ls_output(output)[0]
         if not sysfs_addr:
             raise Exception(f"Failed to find sysfs address: ls -l {ls_command}")
         return sysfs_addr.full_path
@@ -412,8 +413,8 @@ class VirtioDisk(Disk):
     @staticmethod
     def get_sysfs_addr(device_id: str) -> str:
         ls_command = f"$(find -H /sys/devices/ -name {device_id} -type d)"
-        output = fs_utils.ls_item(f"{ls_command}")
-        sysfs_addr = fs_utils.parse_ls_output(output)[0]
+        output = fs_tools.ls_item(f"{ls_command}")
+        sysfs_addr = fs_tools.parse_ls_output(output)[0]
         if not sysfs_addr:
             raise Exception(f"Failed to find sysfs address: ls -l {ls_command}")
 

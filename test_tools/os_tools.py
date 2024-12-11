@@ -14,8 +14,8 @@ from packaging import version
 
 from core.test_run import TestRun
 from storage_devices.device import Device
-from test_tools.disk_utils import get_sysfs_path
-from test_tools.fs_utils import check_if_file_exists
+from test_tools.disk_tools import get_sysfs_path
+from test_tools.fs_tools import check_if_file_exists, is_mounted
 from test_utils.filesystem.file import File
 from connection.utils.retry import Retry
 
@@ -108,13 +108,6 @@ def get_kernel_module_parameter(module_name, parameter):
     if not check_if_file_exists(param_file_path):
         raise FileNotFoundError(f"File {param_file_path} does not exist!")
     return File(param_file_path).read()
-
-
-def is_mounted(path: str):
-    if path is None or path.isspace():
-        raise Exception("Checked path cannot be empty")
-    command = f"mount | grep --fixed-strings '{path.rstrip('/')} '"
-    return TestRun.executor.run(command).exit_code == 0
 
 
 def mount_debugfs():
