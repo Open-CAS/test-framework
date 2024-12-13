@@ -7,8 +7,7 @@ import os
 import posixpath
 
 from core.test_run import TestRun
-from test_tools import disk_tools
-from test_tools.disk_tools import get_sysfs_path
+from test_tools.disk_tools import get_sysfs_path, get_block_size, get_size
 from test_tools.fs_tools import check_if_file_exists, readlink
 from connection.utils.output import CmdException
 
@@ -50,7 +49,7 @@ def discover_hdd_devices(block_devices, devices_res):
     for dev in block_devices:
         if TestRun.executor.run_expect_success(f"cat /sys/block/{dev}/removable").stdout == "1":
             continue  # skip removable drives
-        block_size = disk_tools.get_block_size(dev)
+        block_size = get_block_size(dev)
         if int(block_size) == 4096:
             disk_type = 'hdd4k'
         else:
@@ -62,7 +61,7 @@ def discover_hdd_devices(block_devices, devices_res):
                 f"sg_inq /dev/{dev} | grep -i 'serial number'"
             ).stdout.split(': ')[1].strip(),
             "blocksize": block_size,
-            "size": disk_tools.get_size(dev)})
+            "size": get_size(dev)})
     block_devices.clear()
 
 
@@ -99,8 +98,8 @@ def discover_ssd_devices(block_devices, devices_res):
                 "type": disk_type,
                 "path": resolve_to_by_id_link(device_path),
                 "serial": serial_number,
-                "blocksize": disk_tools.get_block_size(dev),
-                "size": disk_tools.get_size(dev)})
+                "blocksize": get_block_size(dev),
+                "size": get_size(dev)})
             block_devices.remove(dev)
 
 
@@ -125,7 +124,7 @@ def get_system_disks():
 def __get_slaves(device_name: str):
     try:
         device_names = TestRun.executor.run_expect_success(
-            f"ls {os.path.join(get_sysfs_path(device_name), "slaves")}").stdout.splitlines()
+            f"ls {os.path.join(get_sysfs_path(device_name), 'slaves')}").stdout.splitlines()
     except CmdException as e:
         if "No such file or directory" not in e.output.stderr:
             raise

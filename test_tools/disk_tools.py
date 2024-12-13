@@ -10,11 +10,10 @@ import time
 from enum import Enum
 from typing import List
 
-import test_tools.fs_tools
 from core.test_run import TestRun
 from test_tools.dd import Dd
 from test_tools.fs_tools import readlink, parse_ls_output, ls, check_if_directory_exists, \
-    create_directory, wipe_filesystem
+    create_directory, wipefs, is_mounted
 from test_tools.udev import Udev
 from type_def.size import Size, Unit
 
@@ -247,7 +246,7 @@ def get_first_partition_offset(device, aligned: bool):
 
 
 def remove_partitions(device):
-    if test_tools.fs_tools.is_mounted(device.path):
+    if is_mounted(device.path):
         device.unmount()
 
     for partition in device.partitions:
@@ -255,7 +254,7 @@ def remove_partitions(device):
 
     TestRun.LOGGER.info(f"Removing partitions from device: {device.path} "
                         f"({device.get_device_id()}).")
-    wipe_filesystem(device)
+    wipefs(device)
     Udev.trigger()
     Udev.settle()
     output = TestRun.executor.run(f"ls {device.path}* -1")

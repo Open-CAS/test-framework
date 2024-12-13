@@ -4,7 +4,7 @@
 #
 
 import secrets
-from aenum import Enum
+from enum import Enum
 
 
 class Pattern(Enum):

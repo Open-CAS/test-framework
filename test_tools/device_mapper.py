@@ -1,5 +1,5 @@
 #
-# Copyright(c) 2019-2022 Intel Corporation
+# Copyright(c) 2019-2021 Intel Corporation
 # Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
@@ -28,11 +28,6 @@ class DmTarget(Enum):
 
     def __str__(self):
         return self.name.lower()
-
-
-class DmTable:
-    class TableEntry:
-        pass
 
 
 class DmTable:
@@ -131,7 +126,7 @@ class DmTable:
 
         return self
 
-    def add_entry(self, entry: DmTable.TableEntry):
+    def add_entry(self, entry: TableEntry):
         self.table.append(entry)
         return self
 
