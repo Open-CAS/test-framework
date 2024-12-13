@@ -3,10 +3,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+import csv
+
 from core.test_run import TestRun
 from type_def.size import Size, Unit, UnitPerSecond
 from type_def.time import Time
-import csv
+
 
 
 class IOstatExtended:

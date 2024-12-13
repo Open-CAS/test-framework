@@ -1,11 +1,14 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
 import posixpath
 
 from test_tools import fs_tools
+from test_tools.fs_tools import Permissions, PermissionsUsers, PermissionSign, \
+    check_if_directory_exists, ls_item, parse_ls_output
 
 
 class FsItem:
@@ -42,9 +45,9 @@ class FsItem:
         self.refresh_item()
 
     def chmod(self,
-              permissions: fs_tools.Permissions,
-              users: fs_tools.PermissionsUsers,
-              sign: fs_tools.PermissionSign = fs_tools.PermissionSign.set,
+              permissions: Permissions,
+              users: PermissionsUsers,
+              sign: PermissionSign = PermissionSign.set,
               recursive: bool = False):
         fs_tools.chmod(self.full_path, permissions, users, sign=sign, recursive=recursive)
         self.refresh_item()
@@ -58,19 +61,19 @@ class FsItem:
              force: bool = False,
              recursive: bool = False,
              dereference: bool = False):
-        target_dir_exists = fs_tools.check_if_directory_exists(destination)
+        target_dir_exists = check_if_directory_exists(destination)
         fs_tools.copy(str(self), destination, force, recursive, dereference)
         if target_dir_exists:
             path = f"{destination}{'/' if destination[-1] != '/' else ''}{self.name}"
         else:
             path = destination
-        output = fs_tools.ls_item(f"{path}")
-        return fs_tools.parse_ls_output(output)[0]
+        output = ls_item(f"{path}")
+        return parse_ls_output(output)[0]
 
     def move(self,
              destination,
              force: bool = False):
-        target_dir_exists = fs_tools.check_if_directory_exists(destination)
+        target_dir_exists = check_if_directory_exists(destination)
         fs_tools.move(str(self), destination, force)
         if target_dir_exists:
             self.full_path = f"{destination}{'/' if destination[-1] != '/' else ''}{self.name}"
@@ -80,7 +83,7 @@ class FsItem:
         return self
 
     def refresh_item(self):
-        updated_file = fs_tools.parse_ls_output(fs_tools.ls_item(self.full_path))[0]
+        updated_file = parse_ls_output(ls_item(self.full_path))[0]
         # keep order the same as in __init__()
         self.parent_dir = updated_file.parent_dir
         self.name = updated_file.name

@@ -16,7 +16,6 @@ from core.test_run import TestRun
 from storage_devices.device import Device
 from test_tools.disk_tools import get_sysfs_path
 from test_tools.fs_tools import check_if_file_exists, is_mounted
-from test_utils.filesystem.file import File
 from connection.utils.retry import Retry
 
 DEBUGFS_MOUNT_POINT = "/sys/kernel/debug"
@@ -86,7 +85,8 @@ def get_kernel_version():
 
 
 def is_kernel_module_loaded(module_name):
-    output = TestRun.executor.run(f"lsmod | grep ^{module_name}$")
+    command = f"lsmod | grep -E '^{module_name}\\b'"
+    output = TestRun.executor.run(command)
     return output.exit_code == 0
 
 
@@ -107,7 +107,7 @@ def get_kernel_module_parameter(module_name, parameter):
     param_file_path = f"/sys/module/{module_name}/parameters/{parameter}"
     if not check_if_file_exists(param_file_path):
         raise FileNotFoundError(f"File {param_file_path} does not exist!")
-    return File(param_file_path).read()
+    return TestRun.executor.run(f"cat {param_file_path}").stdout
 
 
 def mount_debugfs():

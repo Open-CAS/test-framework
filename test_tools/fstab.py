@@ -4,17 +4,18 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-from test_tools import fs_tools, systemctl
+from test_tools.fs_tools import append_line, remove_lines
+from test_tools.systemctl import reload_daemon, restart_service
 
 
 def add_mountpoint(device, mount_point, fs_type, mount_now=True):
-    fs_tools.append_line("/etc/fstab",
-                         f"{device.path} {mount_point} {fs_type.name} defaults 0 0")
-    systemctl.reload_daemon()
+    append_line("/etc/fstab",
+                f"{device.path} {mount_point} {fs_type.name} defaults 0 0")
+    reload_daemon()
     if mount_now:
-        systemctl.restart_service("local-fs.target")
+        restart_service("local-fs.target")
 
 
 def remove_mountpoint(device):
-    fs_tools.remove_lines("/etc/fstab", device.path)
-    systemctl.reload_daemon()
+    remove_lines("/etc/fstab", device.path)
+    reload_daemon()

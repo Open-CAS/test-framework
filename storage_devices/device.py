@@ -3,31 +3,32 @@
 # Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
+
 import posixpath
 
-import test_tools.fs_tools
 from core.test_run import TestRun
-from test_tools import disk_tools, fs_tools
-from test_tools.disk_tools import get_sysfs_path
-from test_tools.fs_tools import get_device_filesystem_type
+from test_tools import disk_tools
+from test_tools.disk_tools import get_sysfs_path, validate_dev_path, get_size
+from test_tools.fs_tools import (get_device_filesystem_type, Filesystem, wipefs,
+                                 readlink, write_file, mkfs, ls, parse_ls_output)
 from test_utils.io_stats import IoStats
 from type_def.size import Size, Unit
 
 
 class Device:
     def __init__(self, path):
-        disk_tools.validate_dev_path(path)
+        validate_dev_path(path)
         self.path = path
-        self.size = Size(disk_tools.get_size(self.get_device_id()), Unit.Byte)
+        self.size = Size(get_size(self.get_device_id()), Unit.Byte)
         self.filesystem = get_device_filesystem_type(self.get_device_id())
         self.mount_point = None
 
-    def create_filesystem(self, fs_type: test_tools.fs_tools.Filesystem, force=True, blocksize=None):
-        test_tools.fs_tools.create_filesystem(self, fs_type, force, blocksize)
+    def create_filesystem(self, fs_type: Filesystem, force=True, blocksize=None):
+        mkfs(self, fs_type, force, blocksize)
         self.filesystem = fs_type
 
     def wipe_filesystem(self, force=True):
-        test_tools.fs_tools.wipe_filesystem(self, force)
+        wipefs(self, force)
         self.filesystem = None
 
     def is_mounted(self):
@@ -36,7 +37,7 @@ class Device:
             return False
         else:
             mount_point_line = output.stdout.split('\n')[1]
-            device_path = fs_tools.readlink(self.path)
+            device_path = readlink(self.path)
             self.mount_point = mount_point_line[0:mount_point_line.find(device_path)].strip()
             return True
 
@@ -58,27 +59,26 @@ class Device:
         return next(i for i in items if i.full_path.startswith(directory))
 
     def get_device_id(self):
-        return fs_tools.readlink(self.path).split('/')[-1]
+        return readlink(self.path).split('/')[-1]
 
     def get_all_device_links(self, directory: str):
-        from test_tools import fs_tools
-        output = fs_tools.ls(f"$(find -L {directory} -samefile {self.path})")
-        return fs_tools.parse_ls_output(output, self.path)
+        output = ls(f"$(find -L {directory} -samefile {self.path})")
+        return parse_ls_output(output, self.path)
 
     def get_io_stats(self):
         return IoStats.get_io_stats(self.get_device_id())
 
     def get_sysfs_property(self, property_name):
-        path = posixpath.join(disk_tools.get_sysfs_path(self.get_device_id()),
+        path = posixpath.join(get_sysfs_path(self.get_device_id()),
                               "queue", property_name)
         return TestRun.executor.run_expect_success(f"cat {path}").stdout
 
     def set_sysfs_property(self, property_name, value):
         TestRun.LOGGER.info(
             f"Setting {property_name} for device {self.get_device_id()} to {value}.")
-        path = posixpath.join(disk_tools.get_sysfs_path(self.get_device_id()), "queue",
+        path = posixpath.join(get_sysfs_path(self.get_device_id()), "queue",
                             property_name)
-        fs_tools.write_file(path, str(value))
+        write_file(path, str(value))
 
     def set_max_io_size(self, new_max_io_size: Size):
         self.set_sysfs_property("max_sectors_kb",

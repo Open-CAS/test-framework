@@ -1,9 +1,10 @@
 #
 # Copyright(c) 2020-2021 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import concurrent
+from concurrent.futures import ThreadPoolExecutor
 
 
 def start_async_func(func, *args):
@@ -14,5 +15,5 @@ def start_async_func(func, *args):
     - done() method returns True when task ended (have a result or ended with an exception)
     otherwise returns False
     """
-    executor = concurrent.futures.ThreadPoolExecutor()
+    executor = ThreadPoolExecutor()
     return executor.submit(func, *args)

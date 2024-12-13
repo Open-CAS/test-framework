@@ -11,7 +11,8 @@ import re
 import textwrap
 from collections import namedtuple
 from datetime import datetime, timedelta
-from enum import Enum, IntFlag
+from enum import Enum
+from aenum import IntFlag  # IntFlag from enum is not able to correctly parse string like "x|y|z"
 
 from connection.utils.output import CmdException
 from core.test_run import TestRun
@@ -402,7 +403,7 @@ def create_random_test_file(target_file_path: str,
     return file
 
 
-def create_filesystem(device, filesystem: Filesystem, force=True, blocksize=None):
+def mkfs(device, filesystem: Filesystem, force=True, blocksize=None):
     TestRun.LOGGER.info(
         f"Creating filesystem ({filesystem.name}) on device: {device.path}")
     force_param = ' -f ' if filesystem == Filesystem.xfs else ' -F '
@@ -417,7 +418,7 @@ def create_filesystem(device, filesystem: Filesystem, force=True, blocksize=None
         f"Successfully created filesystem on device: {device.path}")
 
 
-def wipe_filesystem(device, force=True):
+def wipefs(device, force=True):
     TestRun.LOGGER.info(f"Erasing the device: {device.path}")
     force_param = ' -f' if force else ''
     cmd = f'wipefs -a{force_param} {device.path}'
