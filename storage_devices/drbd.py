@@ -3,14 +3,13 @@
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 #
 
-import os
 import posixpath
 
 from core.test_run import TestRun
 from storage_devices.device import Device
 from test_tools.drbdadm import Drbdadm
 from test_utils.filesystem.symlink import Symlink
-from test_utils.output import CmdException
+from connection.utils.output import CmdException
 
 
 class Drbd(Device):

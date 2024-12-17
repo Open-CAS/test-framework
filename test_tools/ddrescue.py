@@ -3,14 +3,14 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import test_utils.linux_command as linux_comm
-import test_utils.size as size
+import type_def.size as size
 from core.test_run import TestRun
+from test_tools.common.linux_command import LinuxCommand
 
 
-class Ddrescue(linux_comm.LinuxCommand):
+class Ddrescue(LinuxCommand):
     def __init__(self):
-        linux_comm.LinuxCommand.__init__(self, TestRun.executor, 'ddrescue')
+        LinuxCommand.__init__(self, TestRun.executor, 'ddrescue')
         self.source_path = None
         self.destination_path = None
         self.param_name_prefix = "--"
@@ -42,6 +42,6 @@ class Ddrescue(linux_comm.LinuxCommand):
         return self.set_param('size', int(value.get_value()))
 
     def __str__(self):
-        command = linux_comm.LinuxCommand.__str__(self)
+        command = LinuxCommand.__str__(self)
         command += f" {self.source_path} {self.destination_path}"
         return command

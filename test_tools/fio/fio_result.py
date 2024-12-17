@@ -4,8 +4,8 @@
 #
 
 
-from test_utils.size import Size, Unit, UnitPerSecond
-from test_utils.time import Time
+from type_def.size import Size, Unit, UnitPerSecond
+from type_def.time import Time
 
 
 class FioResult:
@@ -103,9 +103,6 @@ class FioResult:
     def write_runtime(self):
         return Time(microseconds=self.job.write.runtime)
 
-    def write_completion_latency_average(self):
-        return Time(nanoseconds=self.job.write.lat_ns.mean)
-
     def write_completion_latency_min(self):
         return Time(nanoseconds=self.job.write.lat_ns.min)
 
@@ -138,9 +135,6 @@ class FioResult:
 
     def trim_runtime(self):
         return Time(microseconds=self.job.trim.runtime)
-
-    def trim_completion_latency_average(self):
-        return Time(nanoseconds=self.job.trim.lat_ns.mean)
 
     def trim_completion_latency_min(self):
         return Time(nanoseconds=self.job.trim.lat_ns.min)

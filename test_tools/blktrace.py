@@ -14,8 +14,9 @@ from datetime import timedelta
 from core.test_run import TestRun
 from storage_devices.device import Device
 from test_utils.filesystem.directory import Directory
-from test_utils.os_utils import is_mounted, drop_caches, DropCachesMode
-from test_utils.size import Size, Unit
+from test_tools.os_tools import drop_caches, DropCachesMode
+from test_tools.fs_tools import is_mounted
+from type_def.size import Size, Unit
 
 DEBUGFS_MOUNT_POINT = "/sys/kernel/debug"
 PREFIX = "trace_"

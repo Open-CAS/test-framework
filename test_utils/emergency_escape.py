@@ -7,8 +7,8 @@ from textwrap import dedent
 from string import Template
 from pathlib import Path
 
-from .systemd import enable_service, reload_daemon, systemd_service_directory, disable_service
-from test_tools.fs_utils import (
+from test_tools.systemctl import enable_service, reload_daemon, systemd_service_directory
+from test_tools.fs_tools import (
     create_file,
     write_file,
     remove,

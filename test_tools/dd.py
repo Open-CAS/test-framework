@@ -3,8 +3,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import test_utils.linux_command as linux_comm
-import test_utils.size as size
+import test_tools.common.linux_command as linux_comm
+import type_def.size as size
 from core.test_run import TestRun
 
 

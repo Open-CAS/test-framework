@@ -8,7 +8,7 @@ import time
 from datetime import timedelta
 
 from core.test_run import TestRun
-from test_utils.output import CmdException
+from connection.utils.output import CmdException
 
 
 class BaseExecutor:

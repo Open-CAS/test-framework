@@ -1,15 +1,15 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
-
+import os
 import posixpath
 
 from core.test_run import TestRun
-from test_tools import disk_utils
-from test_tools.fs_utils import check_if_file_exists, readlink
-from test_utils import os_utils
-from test_utils.output import CmdException
+from test_tools.disk_tools import get_sysfs_path, get_block_size, get_size
+from test_tools.fs_tools import check_if_file_exists, readlink
+from connection.utils.output import CmdException
 
 
 def find_disks():
@@ -49,7 +49,7 @@ def discover_hdd_devices(block_devices, devices_res):
     for dev in block_devices:
         if TestRun.executor.run_expect_success(f"cat /sys/block/{dev}/removable").stdout == "1":
             continue  # skip removable drives
-        block_size = disk_utils.get_block_size(dev)
+        block_size = get_block_size(dev)
         if int(block_size) == 4096:
             disk_type = 'hdd4k'
         else:
@@ -61,7 +61,7 @@ def discover_hdd_devices(block_devices, devices_res):
                 f"sg_inq /dev/{dev} | grep -i 'serial number'"
             ).stdout.split(': ')[1].strip(),
             "blocksize": block_size,
-            "size": disk_utils.get_size(dev)})
+            "size": get_size(dev)})
     block_devices.clear()
 
 
@@ -98,57 +98,22 @@ def discover_ssd_devices(block_devices, devices_res):
                 "type": disk_type,
                 "path": resolve_to_by_id_link(device_path),
                 "serial": serial_number,
-                "blocksize": disk_utils.get_block_size(dev),
-                "size": disk_utils.get_size(dev)})
+                "blocksize": get_block_size(dev),
+                "size": get_size(dev)})
             block_devices.remove(dev)
-
-
-def get_disk_serial_number(dev_path):
-    commands = [
-        f"(udevadm info --query=all --name={dev_path} | grep 'SCSI.*_SERIAL' || "
-        f"udevadm info --query=all --name={dev_path} | grep 'ID_SERIAL_SHORT') | "
-        "awk -F '=' '{print $NF}'",
-        f"sg_inq {dev_path} 2> /dev/null | grep '[Ss]erial number:' | "
-        "awk '{print $NF}'",
-        f"udevadm info --query=all --name={dev_path} | grep 'ID_SERIAL' | "
-        "awk -F '=' '{print $NF}'"
-    ]
-    for command in commands:
-        serial = TestRun.executor.run(command).stdout
-        if serial:
-            return serial.split('\n')[0]
-    return None
-
-
-def get_all_serial_numbers():
-    serial_numbers = {}
-    block_devices = get_block_devices_list()
-    for dev in block_devices:
-        serial = get_disk_serial_number(dev)
-        try:
-            path = resolve_to_by_id_link(dev)
-        except Exception:
-            continue
-        if serial:
-            serial_numbers[serial] = path
-        else:
-            TestRun.LOGGER.warning(f"Device {path} ({dev}) does not have a serial number.")
-            serial_numbers[path] = path
-    return serial_numbers
 
 
 def get_system_disks():
     system_device = TestRun.executor.run_expect_success('mount | grep " / "').stdout.split()[0]
     readlink_output = readlink(system_device)
     device_name = readlink_output.split('/')[-1]
-    sys_block_path = os_utils.get_sys_block_path()
     used_device_names = __get_slaves(device_name)
     if not used_device_names:
         used_device_names = [device_name]
     disk_names = []
     for device_name in used_device_names:
-        if check_if_file_exists(f'{sys_block_path}/{device_name}/partition'):
-            parent_device = readlink(f'{sys_block_path}/{device_name}/..').split('/')[-1]
+        if check_if_file_exists(os.path.join(get_sysfs_path(device_name), "partition")):
+            parent_device = readlink(os.path.join(get_sysfs_path(device_name), "..")).split('/')[-1]
             disk_names.append(parent_device)
         else:
             disk_names.append(device_name)
@@ -159,7 +124,7 @@ def get_system_disks():
 def __get_slaves(device_name: str):
     try:
         device_names = TestRun.executor.run_expect_success(
-            f'ls {os_utils.get_sys_block_path()}/{device_name}/slaves').stdout.splitlines()
+            f"ls {os.path.join(get_sysfs_path(device_name), 'slaves')}").stdout.splitlines()
     except CmdException as e:
         if "No such file or directory" not in e.output.stderr:
             raise
@@ -177,7 +142,9 @@ def __get_slaves(device_name: str):
 
 def resolve_to_by_id_link(path):
     by_id_paths = TestRun.executor.run_expect_success("ls /dev/disk/by-id -1").stdout.splitlines()
-    dev_full_paths = [posixpath.join("/dev/disk/by-id", by_id_path) for by_id_path in by_id_paths]
+    dev_full_paths = [
+        posixpath.join("/dev/disk/by-id", by_id_path) for by_id_path in by_id_paths
+    ]
 
     for full_path in dev_full_paths:
         # handle exception for broken links

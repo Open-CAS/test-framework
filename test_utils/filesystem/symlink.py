@@ -5,7 +5,7 @@
 #
 
 from core.test_run import TestRun
-from test_tools.fs_utils import (
+from test_tools.fs_tools import (
     readlink,
     create_directory,
     check_if_symlink_exists,
