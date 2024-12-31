@@ -316,6 +316,9 @@ class FioParam(LinuxCommand):
     def verify_only(self, value: bool = True):
         return self.set_flags('verify_only') if value else self.remove_param('verify_only')
 
+    def trim_verify_zero(self, value: bool = True):
+        return self.set_param('trim_verify_zero', int(value))
+
     def write_hint(self, value: str):
         return self.set_param('write_hint', value)
 
