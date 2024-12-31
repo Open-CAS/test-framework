@@ -12,10 +12,10 @@ import tempfile
 import lxml.etree as etree
 from collections import namedtuple
 
+from test_tools import wget
 from core.test_run import TestRun
-from test_tools import fs_utils
-from test_tools.fs_utils import create_directory, check_if_file_exists, write_file
-from test_utils import os_utils
+from test_tools.fs_tools import create_directory, check_if_file_exists, write_file, remove, \
+    check_if_directory_exists
 
 
 class PeachFuzzer:
@@ -75,7 +75,7 @@ class PeachFuzzer:
             cls._install()
         if not cls._is_xml_config_prepared():
             TestRun.block("No Peach Fuzzer XML config needed to generate fuzzed values was found!")
-        fs_utils.remove(cls.fuzzy_output_file, force=True, ignore_errors=True)
+        remove(cls.fuzzy_output_file, force=True, ignore_errors=True)
         TestRun.LOGGER.info(f"Generate {count} unique fuzzed values")
         cmd = f"cd {cls.base_dir}; {cls.peach_dir}/peach --range 0,{count - 1} " \
               f"--seed {random.randrange(2 ** 32)} {cls.xml_config_file} > " \
@@ -155,7 +155,7 @@ class PeachFuzzer:
         Install Peach Fuzzer on the DUT
         """
         create_directory(cls.base_dir, True)
-        peach_archive = os_utils.download_file(
+        peach_archive = wget.download_file(
             cls.peach_fuzzer_3_0_url, destination_dir=cls.base_dir
         )
         TestRun.executor.run_expect_success(
@@ -172,7 +172,7 @@ class PeachFuzzer:
         """
         if not cls._is_mono_installed():
             TestRun.block("Mono is not installed, can't continue with Peach Fuzzer!")
-        if fs_utils.check_if_directory_exists(posixpath.join(cls.base_dir, cls.peach_dir)):
+        if check_if_directory_exists(posixpath.join(cls.base_dir, cls.peach_dir)):
             return "Peach" in TestRun.executor.run(
                 f"cd {cls.base_dir} && {cls.peach_dir}/peach --version").stdout.strip()
         else:
@@ -197,7 +197,7 @@ class PeachFuzzer:
         """
         Check if Peach Fuzzer XML config is present on the DUT
         """
-        if fs_utils.check_if_file_exists(cls.xml_config_file):
+        if check_if_file_exists(cls.xml_config_file):
             return True
         else:
             return False

@@ -15,8 +15,8 @@ import portalocker
 from log.html_log_config import HtmlLogConfig
 from log.html_log_manager import HtmlLogManager
 from log.html_presentation_policy import html_policy
-from test_utils.output import Output
-from test_utils.singleton import Singleton
+from connection.utils.output import Output
+from test_utils.common.singleton import Singleton
 
 
 def create_log(log_base_path, test_module, additional_args=None):
@@ -188,7 +188,7 @@ class Log(HtmlLogManager, metaclass=Singleton):
 
     def get_additional_logs(self):
         from core.test_run import TestRun
-        from test_tools.fs_utils import check_if_file_exists
+        from test_tools.fs_tools import check_if_file_exists
         messages_log = "/var/log/messages"
         if not check_if_file_exists(messages_log):
             messages_log = "/var/log/syslog"

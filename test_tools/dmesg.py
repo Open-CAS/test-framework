@@ -4,7 +4,7 @@
 #
 
 from core.test_run import TestRun
-from test_utils.output import Output
+from connection.utils.output import Output
 
 
 def get_dmesg() -> str:

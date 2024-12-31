@@ -3,17 +3,18 @@
 # Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
+
 import os
 import re
+import paramiko
 import socket
 import subprocess
-from datetime import timedelta, datetime
 
-import paramiko
+from datetime import timedelta, datetime
 
 from connection.base_executor import BaseExecutor
 from core.test_run import TestRun, Blocked
-from test_utils.output import Output
+from connection.utils.output import Output
 
 
 class SshExecutor(BaseExecutor):
@@ -46,7 +47,7 @@ class SshExecutor(BaseExecutor):
             hostname = target["hostname"]
             key_filename = target.get("identityfile", None)
             user = target.get("user", user)
-            port = target.get("port", port)
+            port = int(target.get("port", port))
             if target.get("proxyjump", None) is not None:
                 proxy = config.lookup(target["proxyjump"])
                 jump = paramiko.SSHClient()

@@ -13,8 +13,8 @@ from connection.base_executor import BaseExecutor
 from core.test_run import TestRun
 from storage_devices.device import Device
 from test_tools.fio.fio_result import FioResult
-from test_utils.linux_command import LinuxCommand
-from test_utils.size import Size
+from test_tools.common.linux_command import LinuxCommand
+from type_def.size import Size
 
 
 class CpusAllowedPolicy(Enum):
@@ -315,6 +315,9 @@ class FioParam(LinuxCommand):
 
     def verify_only(self, value: bool = True):
         return self.set_flags('verify_only') if value else self.remove_param('verify_only')
+
+    def trim_verify_zero(self, value: bool = True):
+        return self.set_param('trim_verify_zero', int(value))
 
     def write_hint(self, value: str):
         return self.set_param('write_hint', value)

@@ -10,10 +10,10 @@ from typing import Union
 from core.test_run import TestRun
 from storage_devices.device import Device
 from storage_devices.disk import Disk
-from test_tools.fs_utils import readlink
-from test_utils.disk_finder import resolve_to_by_id_link, get_system_disks
+from test_tools.fs_tools import readlink
+from test_tools.disk_finder import resolve_to_by_id_link, get_system_disks
 from test_utils.filesystem.symlink import Symlink
-from test_utils.size import Size
+from type_def.size import Size
 
 lvm_config_path = "/etc/lvm/lvm.conf"
 filter_prototype_regex = r"^\sfilter\s=\s\["

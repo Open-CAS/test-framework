@@ -8,12 +8,12 @@ import datetime
 import uuid
 
 from packaging.version import Version
-import test_tools.fio.fio_param
-import test_tools.fs_utils
+
 from core.test_run import TestRun
-from test_tools import fs_utils
-from test_utils import os_utils
-from test_utils.output import CmdException
+from connection.utils.output import CmdException
+from test_tools import wget
+from test_tools.fio.fio_param import FioParam, FioParamCmd, FioOutput, FioParamConfig
+from test_tools.fs_tools import uncompress_archive
 
 
 class Fio:
@@ -22,12 +22,12 @@ class Fio:
         self.default_run_time = datetime.timedelta(hours=1)
         self.jobs = []
         self.executor = executor_obj if executor_obj is not None else TestRun.executor
-        self.base_cmd_parameters: test_tools.fio.fio_param.FioParam = None
-        self.global_cmd_parameters: test_tools.fio.fio_param.FioParam = None
+        self.base_cmd_parameters: FioParam = None
+        self.global_cmd_parameters: FioParam = None
 
-    def create_command(self, output_type=test_tools.fio.fio_param.FioOutput.json):
-        self.base_cmd_parameters = test_tools.fio.fio_param.FioParamCmd(self, self.executor)
-        self.global_cmd_parameters = test_tools.fio.fio_param.FioParamConfig(self, self.executor)
+    def create_command(self, output_type=FioOutput.json):
+        self.base_cmd_parameters = FioParamCmd(self, self.executor)
+        self.global_cmd_parameters = FioParamConfig(self, self.executor)
 
         self.fio_file = \
             f'fio_run_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}_{uuid.uuid4().hex}'
@@ -50,8 +50,8 @@ class Fio:
 
     def install(self):
         fio_url = f"http://brick.kernel.dk/snaps/fio-{self.min_fio_version}.tar.bz2"
-        fio_package = os_utils.download_file(fio_url)
-        fs_utils.uncompress_archive(fio_package)
+        fio_package = wget.download_file(fio_url)
+        uncompress_archive(fio_package)
         TestRun.executor.run_expect_success(
             f"cd {fio_package.parent_dir}/fio-{self.min_fio_version}"
             f" && ./configure && make -j && make install"
@@ -106,7 +106,7 @@ class Fio:
             command = f"echo '{self.execution_cmd_parameters()}' |" \
                 f" {str(self.base_cmd_parameters)} -"
         else:
-            fio_parameters = test_tools.fio.fio_param.FioParamCmd(self, self.executor)
+            fio_parameters = FioParamCmd(self, self.executor)
             fio_parameters.command_env_var.update(self.base_cmd_parameters.command_env_var)
             fio_parameters.command_param.update(self.base_cmd_parameters.command_param)
             fio_parameters.command_param.update(self.global_cmd_parameters.command_param)

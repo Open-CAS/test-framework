@@ -3,11 +3,12 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-from core.test_run import TestRun
-from storage_devices.device import Device
-from test_utils.size import Size, Unit, UnitPerSecond
-from test_utils.time import Time
 import csv
+
+from core.test_run import TestRun
+from type_def.size import Size, Unit, UnitPerSecond
+from type_def.time import Time
+
 
 
 class IOstatExtended:
@@ -84,7 +85,7 @@ class IOstatExtended:
     @classmethod
     def get_iostat_list(
         cls,
-        devices_list: [Device],
+        devices_list: [str],
         since_boot: bool = True,
         interval: int = 1,
     ):
@@ -138,7 +139,7 @@ class IOstatBasic:
     @classmethod
     def get_iostat_list(
         cls,
-        devices_list: [Device],
+        devices_list: [str],
         since_boot: bool = True,
         interval: int = 1,
     ):
@@ -150,8 +151,8 @@ class IOstatBasic:
 
 
 def _get_iostat_list(
-    class_type: type,
-    devices_list: [Device],
+    class_type: type(IOstatExtended) | type(IOstatBasic),
+    devices_list: [str],
     since_boot: bool,
     interval: int,
 ):
@@ -163,7 +164,7 @@ def _get_iostat_list(
     if not since_boot:
         iostat_cmd += f"-y {interval} 1 "
 
-    iostat_cmd += " ".join([name.get_device_id() for name in devices_list])
+    iostat_cmd += " ".join(devices_list)
 
     sed_cmd = "sed -n '/^$/d;s/\s\+/,/g;/^Device/,$p'"
 

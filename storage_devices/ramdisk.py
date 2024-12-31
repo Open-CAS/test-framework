@@ -7,11 +7,11 @@ import posixpath
 
 from core.test_run import TestRun
 from storage_devices.device import Device
-from test_tools import disk_utils
-from test_tools.fs_utils import ls, parse_ls_output
+from test_tools.disk_tools import get_size
+from test_tools.fs_tools import ls, parse_ls_output
 from test_utils.filesystem.symlink import Symlink
-from test_utils.os_utils import reload_kernel_module, unload_kernel_module, is_kernel_module_loaded
-from test_utils.size import Size, Unit
+from test_tools.os_tools import reload_kernel_module, unload_kernel_module, is_kernel_module_loaded
+from type_def.size import Size, Unit
 
 
 class RamDisk(Device):
@@ -68,7 +68,7 @@ class RamDisk(Device):
         ram_disks = cls._list_devices()
         return (
             len(ram_disks) >= disk_count
-            and Size(disk_utils.get_size(ram_disks[0].name), Unit.Byte).align_down(Unit.MiB.value)
+            and Size(get_size(ram_disks[0].name), Unit.Byte).align_down(Unit.MiB.value)
             == disk_size.align_down(Unit.MiB.value)
         )
 

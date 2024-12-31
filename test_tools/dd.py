@@ -1,16 +1,17 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
-import test_utils.linux_command as linux_comm
-import test_utils.size as size
+import type_def.size as size
 from core.test_run import TestRun
+from test_tools.common.linux_command import LinuxCommand
 
 
-class Dd(linux_comm.LinuxCommand):
+class Dd(LinuxCommand):
     def __init__(self):
-        linux_comm.LinuxCommand.__init__(self, TestRun.executor, 'dd')
+        LinuxCommand.__init__(self, TestRun.executor, 'dd')
 
     def block_size(self, value: size.Size):
         return self.set_param('bs', int(value.get_value()))

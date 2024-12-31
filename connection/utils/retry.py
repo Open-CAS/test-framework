@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2021 Intel Corporation
+# Copyright(c) 2024 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -33,7 +34,7 @@ class Retry:
             try:
                 result = func()
                 return True
-            except:
+            except Exception:
                 return False
 
         cls.run_while_false(wrapped_func, retries=retries, timeout=timeout)

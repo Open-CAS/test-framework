@@ -5,7 +5,7 @@
 import re
 
 from core.test_run import TestRun
-from test_utils.output import CmdException
+from connection.utils.output import CmdException
 
 SYSFS_LINE_FORMAT = r"^(\d+\s+){10,}\d+$"
 PROCFS_LINE_FORMAT = r"^\d+\s+\d+\s+[\w-]+\s+" + SYSFS_LINE_FORMAT[1:]

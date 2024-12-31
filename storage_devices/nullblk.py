@@ -5,11 +5,10 @@
 
 from core.test_run import TestRun
 from storage_devices.device import Device
-from test_tools.fs_utils import ls, parse_ls_output
-from test_utils.os_utils import (
+from test_tools.fs_tools import ls, parse_ls_output
+from test_tools.os_tools import (
     unload_kernel_module,
     is_kernel_module_loaded,
-    ModuleRemoveMethod,
     reload_kernel_module,
 )
 
@@ -37,7 +36,7 @@ class NullBlk(Device):
         if not is_kernel_module_loaded(cls._module):
             return
         TestRun.LOGGER.info("Removing null_blk ")
-        unload_kernel_module(module_name=cls._module, unload_method=ModuleRemoveMethod.modprobe)
+        unload_kernel_module(module_name=cls._module)
 
     @classmethod
     def list(cls):
