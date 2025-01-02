@@ -1,6 +1,6 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
-# Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2023-2025 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -102,11 +102,11 @@ def create_partition(
 
     TestRun.executor.run_expect_success("udevadm settle")
     if not check_partition_after_create(
-            part_size,
-            part_number,
-            device.path,
-            part_type,
-            aligned):
+            size=part_size,
+            part_number=part_number,
+            parent_dev_path=device.path,
+            part_type=part_type,
+            aligned=aligned):
         raise Exception("Could not create partition!")
 
     if part_type != PartitionType.extended:
@@ -147,7 +147,7 @@ def create_partitions(device, sizes: [], partition_table_type=PartitionTable.gpt
 
     for s in sizes:
         size = Size(
-            s.get_value(device.block_size) - device.block_size.value, device.block_size)
+            s.get_value(device.block_size) - 1, device.block_size)
         if partition_table_type == PartitionTable.msdos and \
                 len(sizes) > 4 and len(device.partitions) == 3:
             if available_disk_size(device) > msdos_part_max_size:
@@ -162,12 +162,12 @@ def create_partitions(device, sizes: [], partition_table_type=PartitionTable.gpt
             partition_number_offset = 1
 
         partition_number = len(device.partitions) + 1 + partition_number_offset
-        create_partition(device,
-                         size,
-                         partition_number,
-                         partition_type,
-                         Unit.MebiByte,
-                         True)
+        create_partition(device=device,
+                         part_size=size,
+                         part_number=partition_number,
+                         part_type=partition_type,
+                         unit=device.block_size,
+                         aligned=True)
 
 
 def get_block_size(device):
@@ -197,7 +197,8 @@ def get_pci_address(device):
     return pci_address
 
 
-def check_partition_after_create(size, part_number, parent_dev_path, part_type, aligned):
+def check_partition_after_create(size: Size, part_number: int, parent_dev_path: str,
+                                 part_type: PartitionType, aligned: bool):
     partition_path = get_partition_path(parent_dev_path, part_number)
     if "dev/cas" not in partition_path:
         cmd = f"find {partition_path} -type l"

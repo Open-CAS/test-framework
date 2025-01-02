@@ -1,6 +1,6 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
-# Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2023-2025 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -132,7 +132,8 @@ def __presetup(cls):
     if cls.config['type'] == 'ssh':
         try:
             IP(cls.config['ip'])
-            cls.config['host'] = cls.config['ip']
+            if not cls.config['host']:
+                cls.config['host'] = cls.config['ip']
         except ValueError:
             TestRun.block("IP address from config is in invalid format.")
         except KeyError:

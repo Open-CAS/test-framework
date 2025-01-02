@@ -1,6 +1,6 @@
 #
 # Copyright(c) 2020-2021 Intel Corporation
-# Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2023-2025 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -46,18 +46,25 @@ class PowerControlPlugin:
     def teardown(self):
         pass
 
-    def power_cycle(self):
-        self.executor.run_expect_success(f"sudo virsh reset {TestRun.dut.virsh['vm_name']}")
+    def power_cycle(self, wait_for_connection: bool = False, delay_until_reboot: int = 0) -> None:
+        self.executor.run_expect_success(f"sudo virsh destroy {TestRun.dut.virsh['vm_name']}")
         TestRun.executor.disconnect()
-        TestRun.executor.wait_for_connection(timedelta(seconds=TestRun.dut.virsh["reboot_timeout"]))
+        self.executor.run_expect_success(
+            f"(sleep {delay_until_reboot} && sudo virsh start {TestRun.dut.virsh['vm_name']}) &"
+        )
+        if wait_for_connection:
+            TestRun.executor.wait_for_connection(
+                timedelta(seconds=TestRun.dut.virsh["reboot_timeout"])
+            )
 
     def check_if_vm_exists(self, vm_name) -> bool:
         return self.executor.run(f"sudo virsh list|grep -w {vm_name}").exit_code == 0
 
     def parse_virsh_config(self, vm_name, reboot_timeout=DEFAULT_REBOOT_TIMEOUT) -> dict | None:
         if not self.check_if_vm_exists(vm_name=vm_name):
-            raise ValueError(f"Virsh power plugin error: couldn't find VM {vm_name} on host "
-                             f"{self.host}")
+            raise ValueError(
+                f"Virsh power plugin error: couldn't find VM {vm_name} on host {self.host}"
+            )
         return {
             "vm_name": vm_name,
             "reboot_timeout": reboot_timeout,
