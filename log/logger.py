@@ -1,10 +1,12 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
+# Copyright(c) 2025 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
 import logging
 import os
+import re
 import sys
 from contextlib import contextmanager
 from datetime import datetime
@@ -45,6 +47,7 @@ class Log(HtmlLogManager, metaclass=Singleton):
     logger = None
     LOG_FORMAT = '%(asctime)s %(levelname)s:\t%(message)s'
     DATE_FORMAT = "%Y/%m/%d %H:%M:%S"
+    unique_test_identifier = "TEST_IDENTIFIER_TEMPLATE"
     command_id = 0
     lock = Lock()
 
@@ -189,15 +192,23 @@ class Log(HtmlLogManager, metaclass=Singleton):
     def get_additional_logs(self):
         from core.test_run import TestRun
         from test_tools.fs_tools import check_if_file_exists
+
         messages_log = "/var/log/messages"
         if not check_if_file_exists(messages_log):
             messages_log = "/var/log/syslog"
-        log_files = {"messages.log": messages_log,
+
+        log_files = {"messages.log": "/tmp/messages",
                      "dmesg.log": "/tmp/dmesg"}
         extra_logs = TestRun.config.get("extra_logs", {})
         log_files.update(extra_logs)
 
-        TestRun.executor.run(f"dmesg > {log_files['dmesg.log']}")
+        # Escape special characters from test identifier to be properly processed by awk
+        test_identifier = re.escape(TestRun.LOGGER.unique_test_identifier)
+
+        TestRun.executor.run(
+            f"dmesg | awk '/{test_identifier}/,0' > {log_files['dmesg.log']}")
+        TestRun.executor.run(
+            f"awk '/{test_identifier}/,0' {messages_log} > {log_files['messages.log']}")
 
         dut_identifier = TestRun.dut.ip if TestRun.dut.ip else TestRun.dut.config["host"]
         for log_name, log_source_path in log_files.items():
@@ -228,3 +239,11 @@ class Log(HtmlLogManager, metaclass=Singleton):
                 }
             }
             json.dump(data, summary)
+
+    def print_test_identifier_to_logs(self):
+        from core.test_run import TestRun
+        # Add test identifier to dmesg
+        TestRun.executor.run(f"echo {self.unique_test_identifier} > /dev/kmsg")
+
+        # Add test identifier to messages log
+        TestRun.executor.run(f"logger {self.unique_test_identifier}")
