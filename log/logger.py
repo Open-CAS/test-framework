@@ -5,6 +5,7 @@
 
 import logging
 import os
+import posixpath
 import sys
 from contextlib import contextmanager
 from datetime import datetime
@@ -193,7 +194,7 @@ class Log(HtmlLogManager, metaclass=Singleton):
         if not check_if_file_exists(messages_log):
             messages_log = "/var/log/syslog"
         log_files = {"messages.log": messages_log,
-                     "dmesg.log": "/tmp/dmesg"}
+                     "dmesg.log": posixpath.join(TestRun.TEST_RUN_DATA_PATH, "dmesg")}
         extra_logs = TestRun.config.get("extra_logs", {})
         log_files.update(extra_logs)
 

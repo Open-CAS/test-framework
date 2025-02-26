@@ -22,6 +22,7 @@ class TestRun:
     plugin_manager = None
     duts = None
     disks = None
+    TEST_RUN_DATA_PATH = None
 
     @classmethod
     @contextmanager
