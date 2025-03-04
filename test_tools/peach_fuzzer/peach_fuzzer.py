@@ -27,7 +27,7 @@ class PeachFuzzer:
 
     peach_fuzzer_3_0_url = "https://sourceforge.net/projects/peachfuzz/files/Peach/3.0/" \
                            "peach-3.0.202-linux-x86_64-release.zip"
-    base_dir = "/root/Fuzzy"
+    base_dir = posixpath.join(TestRun.TEST_RUN_DATA_PATH, "Fuzzy")
     peach_dir = "peach-3.0.202-linux-x86_64-release"
     xml_config_template = os.path.join(os.path.dirname(__file__), "config_template.xml")
     xml_config_file = posixpath.join(base_dir, "fuzzerConfig.xml")

@@ -23,6 +23,7 @@ from test_tools import disk_finder
 from test_utils.dut import Dut
 
 TestRun = core.test_run.TestRun
+TestRun.TEST_RUN_DATA_PATH = "/tmp/test_data"
 
 
 @classmethod
