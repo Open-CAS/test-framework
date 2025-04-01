@@ -1,11 +1,12 @@
 #
 # Copyright(c) 2022 Intel Corporation
+# Copyright(c) 2025 Huawei Corporation
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
 from textwrap import dedent
 from string import Template
-from pathlib import Path
+from pathlib import PurePosixPath
 
 from test_tools.systemctl import enable_service, reload_daemon, systemd_service_directory
 from test_tools.fs_tools import (
@@ -17,7 +18,7 @@ from test_tools.fs_tools import (
 
 class EmergencyEscape:
     escape_marker = "EMERGENCY_ESCAPE"
-    escape_service = Path("emergency-escape.service")
+    escape_service = PurePosixPath("emergency-escape.service")
     escape_service_template = Template(
         dedent(
             f"""
@@ -38,7 +39,7 @@ class EmergencyEscape:
             """
         ).strip()
     )
-    cleanup_service = Path("emergency-escape-cleanup.service")
+    cleanup_service = PurePosixPath("emergency-escape-cleanup.service")
     cleanup_service_template = Template(
         dedent(
             """
