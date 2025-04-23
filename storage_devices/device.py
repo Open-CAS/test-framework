@@ -17,10 +17,14 @@ from type_def.size import Size, Unit
 
 class Device:
     def __init__(self, path):
-        validate_dev_path(path)
-        self.path = path
-        self.size = Size(get_size(self.get_device_id()), Unit.Byte)
-        self.filesystem = get_device_filesystem_type(self.get_device_id())
+        try:
+            validate_dev_path(path)
+            self.path = path
+            self.size = Size(get_size(self.get_device_id()), Unit.Byte)
+            self.filesystem = get_device_filesystem_type(self.get_device_id())
+        except ValueError:
+            TestRun.LOGGER.info(f"Device {path} not visible in OS")
+            self.path = path
         self.mount_point = None
 
     def create_filesystem(self, fs_type: Filesystem, force=True, blocksize=None):
