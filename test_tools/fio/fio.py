@@ -1,6 +1,6 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
-# Copyright(c) 2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2024-2025 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -14,6 +14,7 @@ from connection.utils.output import CmdException
 from test_tools import wget
 from test_tools.fio.fio_param import FioParam, FioParamCmd, FioOutput, FioParamConfig
 from test_tools.fs_tools import uncompress_archive
+from type_def.size import Size, Unit
 
 
 class Fio:
@@ -25,7 +26,7 @@ class Fio:
         self.base_cmd_parameters: FioParam = None
         self.global_cmd_parameters: FioParam = None
 
-    def create_command(self, output_type=FioOutput.json):
+    def create_command(self, output_type=FioOutput.json, alloc_size: Size = None):
         self.base_cmd_parameters = FioParamCmd(self, self.executor)
         self.global_cmd_parameters = FioParamConfig(self, self.executor)
 
@@ -35,6 +36,10 @@ class Fio:
             .set_param('eta', 'always')\
             .set_param('output-format', output_type.value)\
             .set_param('output', self.fio_file)
+
+        if alloc_size:
+            self.base_cmd_parameters.set_param("alloc-size",
+                                               int(alloc_size.get_value(Unit.KibiByte)))
 
         self.global_cmd_parameters.set_flags('group_reporting')
 

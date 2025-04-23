@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
+# Copyright(c) 2025 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -326,6 +327,9 @@ class FioParam(LinuxCommand):
         if value <= 100:
             return self.set_param('rwmixwrite', value)
         raise ValueError("Argument out of range. Should be 0-100.")
+
+    def open_files(self, value: int):
+        return self.set_param('openfiles', value)
 
     def random_generator(self, value: RandomGenerator):
         return self.set_param('random_generator', value.name)
