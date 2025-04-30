@@ -120,7 +120,9 @@ class Size:
         return int(self.get_value())
 
     def __add__(self, other):
-        return Size(self.get_value() + other.get_value())
+        return Size(self.get_value() + other.get_value()).set_unit(
+            self.unit if self.get_value() < other.get_value() else other.unit
+        )
 
     def __lt__(self, other):
         return self.get_value() < other.get_value()
@@ -146,7 +148,9 @@ class Size:
     def __sub__(self, other):
         if self < other:
             raise ValueError("Subtracted value is too big. Result size cannot be negative.")
-        return Size(self.get_value() - other.get_value())
+        return Size(self.get_value() - other.get_value()).set_unit(
+            self.unit if self.get_value() < other.get_value() else other.unit
+        )
 
     @multimethod
     def __mul__(self, other: int):
