@@ -1,6 +1,6 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
-# Copyright(c) 2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2024-2025 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -118,7 +118,7 @@ class Disk(Device):
         self.serial_number = serial_number
         self.block_size = Unit(block_size)
         self.device_id = self.get_device_id()
-        self.partitions = []
+        self.partitions = self.discover_partitions()
         self.pci_address = None
 
     @classmethod
@@ -139,6 +139,9 @@ class Disk(Device):
             )
         return recognized_types[0]
 
+    def discover_partitions(self) -> list:
+        return disk_tools.discover_partition(self)
+
     def create_partitions(self, sizes: [], partition_table_type=PartitionTable.gpt):
         disk_tools.create_partitions(self, sizes, partition_table_type)
 
@@ -154,7 +157,7 @@ class Disk(Device):
 
     def remove_partitions(self):
         for part in self.partitions:
-            if is_mounted(part.path):
+            if is_mounted(part.device_id):
                 part.unmount()
         if disk_tools.remove_partitions(self):
             self.partitions.clear()

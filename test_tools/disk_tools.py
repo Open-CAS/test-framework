@@ -57,6 +57,53 @@ def get_partition_path(parent_dev, number):
     return f'{parent_dev}{id_separator}{number}'
 
 
+def discover_partition(device) -> list:
+    cmd = (
+        f"lsblk -ln -o NAME,TYPE {device.path} " + r"""| awk '$2 == "part" { print "/dev/" $1 }'"""
+    )
+
+    output = TestRun.executor.run(cmd).stdout
+    partition_list = [line for line in output.split("\n") if line]
+    if not partition_list:
+        return []
+
+    device_name = re.search(r"^(/dev/\S+)(?=\d+)", partition_list[0]).group()
+    if "nvme" in partition_list[0]:
+        device_name = device_name[:-1]
+
+    # needs to be placed here (circular dependency)
+    from storage_devices.partition import Partition
+
+    partitions_on_device_list = []
+
+    cmd = f"fdisk -l --bytes {device_name}" + r"| grep -E '^/dev/[a-z]+[0-9]+'"
+    output = TestRun.executor.run(cmd).stdout.split("\n")
+
+    for partition in partition_list:
+        disk_params = [
+            x for x in next(param for param in output if partition in param).split(" ") if x
+        ]
+        partition_number = int(re.search(r"(\d+)(?!.*\d)", disk_params[0]).group())
+
+        part_number = int(partition_number)
+        begin = Size(int(disk_params[1]), Unit.Byte)
+        end = Size(
+            (int(disk_params[2])),
+            Unit.Byte,
+        )
+        partitions_on_device_list.append(
+            Partition(
+                parent_dev=device,
+                type=PartitionType.logical,
+                number=part_number,
+                begin=begin,
+                end=end,
+            )
+        )
+
+    return partitions_on_device_list
+
+
 def remove_parition(device, part_number):
     TestRun.LOGGER.info(f"Removing part {part_number} from {device.path}")
     cmd = f'parted --script {device.path} rm {part_number}'
