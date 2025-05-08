@@ -7,6 +7,7 @@
 import posixpath
 import re
 import time
+
 from enum import Enum
 from typing import List
 
@@ -87,13 +88,13 @@ def create_partition(
 
     if part_size != Size.zero():
         end = (begin + part_size)
-        end_cmd = f'{end.get_value(unit)}{unit_to_string(unit)}'
+        end_cmd = f'{end.get_value(unit)}{unit.to_short_string()}'
     else:
         end_cmd = '100%'
 
     cmd = f'parted --script {device.path} mkpart ' \
           f'{part_type.name} ' \
-          f'{begin.get_value(unit)}{unit_to_string(unit)} ' \
+          f'{begin.get_value(unit)}{unit.to_short_string()} ' \
           f'{end_cmd}'
     output = TestRun.executor.run(cmd)
 
@@ -290,23 +291,6 @@ def unmount(device):
     else:
         TestRun.LOGGER.info("Device is not mounted.")
         return True
-
-
-def unit_to_string(unit):
-    unit_string = {
-        Unit.Byte: 'B',
-        Unit.Blocks512: 's',
-        Unit.Blocks4096: 's',
-        Unit.KibiByte: 'KiB',
-        Unit.MebiByte: 'MiB',
-        Unit.GibiByte: 'GiB',
-        Unit.TebiByte: 'TiB',
-        Unit.KiloByte: 'kB',
-        Unit.MegaByte: 'MB',
-        Unit.GigaByte: 'GB',
-        Unit.TeraByte: 'TB'
-    }
-    return unit_string.get(unit, "Invalid unit.")
 
 
 def check_if_device_supports_trim(device):
