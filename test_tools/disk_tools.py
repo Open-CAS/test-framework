@@ -87,7 +87,7 @@ def create_partition(
         begin += Size(1, Unit.MebiByte if not aligned else device.block_size)
 
     if part_size != Size.zero():
-        end = (begin + part_size)
+        end = (begin + part_size - Size(1, device.block_size))
         end_cmd = f'{end.get_value(unit)}{unit.to_short_string()}'
     else:
         end_cmd = '100%'
@@ -146,9 +146,7 @@ def create_partitions(device, sizes: [], partition_table_type=PartitionTable.gpt
     partition_number_offset = 0
     msdos_part_max_size = Size(2, Unit.TeraByte)
 
-    for s in sizes:
-        size = Size(
-            s.get_value(device.block_size) - 1, device.block_size)
+    for size in sizes:
         if partition_table_type == PartitionTable.msdos and \
                 len(sizes) > 4 and len(device.partitions) == 3:
             if available_disk_size(device) > msdos_part_max_size:
