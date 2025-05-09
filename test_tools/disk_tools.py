@@ -146,9 +146,7 @@ def create_partitions(device, sizes: [], partition_table_type=PartitionTable.gpt
     partition_number_offset = 0
     msdos_part_max_size = Size(2, Unit.TeraByte)
 
-    for s in sizes:
-        size = Size(
-            s.get_value(device.block_size), device.block_size)
+    for size in sizes:
         if partition_table_type == PartitionTable.msdos and \
                 len(sizes) > 4 and len(device.partitions) == 3:
             if available_disk_size(device) > msdos_part_max_size:
