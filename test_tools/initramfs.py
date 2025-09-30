@@ -1,5 +1,5 @@
 #
-# Copyright(c) 2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2024-2025 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -13,7 +13,7 @@ def update():
     match distro:
         case Distro.DEBIAN | Distro.UBUNTU:
             TestRun.executor.run_expect_success("update-initramfs -u")
-        case Distro.OPENEULER | Distro.CENTOS | Distro.REDHAT:
+        case Distro.OPENEULER | Distro.CENTOS | Distro.REDHAT | Distro.ROCKY:
             TestRun.executor.run_expect_success(
                 "dracut -f /boot/initramfs-$(uname -r).img $(uname -r)"
             )

@@ -1,6 +1,6 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
-# Copyright(c) 2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2024-2025 Huawei Technologies Co., Ltd.
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -24,8 +24,10 @@ class Fio:
         self.executor = executor_obj if executor_obj is not None else TestRun.executor
         self.base_cmd_parameters: FioParam = None
         self.global_cmd_parameters: FioParam = None
+        self.output_type = FioOutput.json
+        self.fio_file = None
 
-    def create_command(self, output_type=FioOutput.json):
+    def create_command(self):
         self.base_cmd_parameters = FioParamCmd(self, self.executor)
         self.global_cmd_parameters = FioParamConfig(self, self.executor)
 
@@ -33,7 +35,7 @@ class Fio:
             f'fio_run_{datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")}_{uuid.uuid4().hex}'
         self.base_cmd_parameters\
             .set_param('eta', 'always')\
-            .set_param('output-format', output_type.value)\
+            .set_param('output-format', self.output_type.value)\
             .set_param('output', self.fio_file)
 
         self.global_cmd_parameters.set_flags('group_reporting')
