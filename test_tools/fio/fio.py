@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
 # Copyright(c) 2024-2025 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -18,7 +19,7 @@ from test_tools.fs_tools import uncompress_archive
 
 class Fio:
     def __init__(self, executor_obj=None):
-        self.min_fio_version = Version(TestRun.config.get("fio_version", "3.30"))
+        self.min_fio_version = Version(TestRun.config.get("fio_version", "3.40"))
         self.default_run_time = datetime.timedelta(hours=1)
         self.jobs = []
         self.executor = executor_obj if executor_obj is not None else TestRun.executor
@@ -51,11 +52,11 @@ class Fio:
         return current_version >= self.min_fio_version
 
     def install(self):
-        fio_url = f"http://brick.kernel.dk/snaps/fio-{self.min_fio_version}.tar.bz2"
+        fio_url = f"https://github.com/axboe/fio/archive/refs/tags/fio-{self.min_fio_version}.tar.gz"
         fio_package = wget.download_file(fio_url)
         uncompress_archive(fio_package)
         TestRun.executor.run_expect_success(
-            f"cd {fio_package.parent_dir}/fio-{self.min_fio_version}"
+            f"cd {fio_package.parent_dir}/fio-fio-{self.min_fio_version}"
             f" && ./configure && make -j && make install"
         )
 
