@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
 # Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -362,7 +363,7 @@ def find_all_files(path: str, recursive: bool = True):
     if not path.strip():
         raise ValueError("No path given.")
 
-    output = TestRun.executor.run_expect_success(f"find \"{path}\" {'-maxdepth 1' if not recursive else ''} \( -type f -o -type l \) -print")
+    output = TestRun.executor.run_expect_success(f"find \"{path}\" {'-maxdepth 1' if not recursive else ''} \\( -type f -o -type l \\) -print")
 
     return output.stdout.splitlines()
 
