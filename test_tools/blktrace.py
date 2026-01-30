@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
 # Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -96,6 +97,9 @@ class RwbsKind(IntFlag):
 
 class BlkTrace:
     def __init__(self, device: Device, *masks: BlkTraceMask):
+        output = TestRun.executor.run("command -v blktrace")
+        if output.exit_code != 0:
+            TestRun.block("blktrace is not installed")
         self._mount_debugfs()
         if device is None:
             raise Exception("Device not provided")
