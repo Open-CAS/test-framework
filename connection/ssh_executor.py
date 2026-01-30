@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
 # Copyright(c) 2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -264,5 +265,5 @@ class SshExecutor(BaseExecutor):
                 pattern, completed_process.stdout + completed_process.stderr, re.MULTILINE
             )
             return matches[-1].decode("utf-8")
-        except:
+        except Exception:
             return None

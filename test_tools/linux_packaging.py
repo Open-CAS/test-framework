@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2022 Intel Corporation
 # Copyright(c) 2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -27,7 +28,7 @@ class RpmSet:
         return output.exit_code == 0
 
     def install(self):
-        TestRun.LOGGER.info(f"Installing RPM packages")
+        TestRun.LOGGER.info("Installing RPM packages")
 
         if not self.packages:
             raise ValueError("No packages given.")
@@ -43,7 +44,7 @@ class RpmSet:
             raise CmdException("Installation failed or errors found during the process.", output)
 
     def uninstall(self):
-        TestRun.LOGGER.info(f"Uninstalling RPM packages")
+        TestRun.LOGGER.info("Uninstalling RPM packages")
 
         if not self.check_if_installed():
             raise FileNotFoundError("Could not uninstall - packages not installed yet.")
@@ -82,7 +83,7 @@ class DebSet:
         return output.exit_code == 0
 
     def install(self):
-        TestRun.LOGGER.info(f"Installing DEB packages")
+        TestRun.LOGGER.info("Installing DEB packages")
 
         if not self.packages:
             raise ValueError("No packages given.")
@@ -98,7 +99,7 @@ class DebSet:
             raise CmdException("Installation failed or errors found during the process.", output)
 
     def uninstall(self):
-        TestRun.LOGGER.info(f"Uninstalling DEB packages")
+        TestRun.LOGGER.info("Uninstalling DEB packages")
 
         if not self.check_if_installed():
             raise FileNotFoundError("Could not uninstall - packages not installed yet.")

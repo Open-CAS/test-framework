@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -25,9 +26,6 @@ class HtmlMainLog(HtmlFileLog):
 
     def start_iteration(self, iteration_id):
         self.__current_iteration_id = iteration_id
-
-    def end_iteration(self):
-        pass
 
     def end_iteration(self, iteration_result):
         root = self.get_root()

@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2022 Intel Corporation
 # Copyright(c) 2025 Huawei Corporation
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -95,8 +96,8 @@ class EmergencyEscape:
 
     @classmethod
     def verify_trigger_in_log(cls, log_list):
-        for l in log_list:
-            if cls.escape_marker in l:
+        for log in log_list:
+            if cls.escape_marker in log:
                 return True
 
         return False

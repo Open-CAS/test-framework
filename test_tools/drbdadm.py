@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2022 Intel Corporation
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause-Clear
 #
 
@@ -22,7 +23,7 @@ class Drbdadm:
     # disable resource
     @staticmethod
     def down_all():
-        cmd = f"drbdadm down all"
+        cmd = "drbdadm down all"
         return TestRun.executor.run_expect_success(cmd)
 
     @staticmethod

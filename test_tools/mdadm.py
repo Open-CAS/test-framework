@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2020-2021 Intel Corporation
 # Copyright(c) 2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -14,7 +15,7 @@ from test_tools.udev import Udev
 class Mdadm:
     @staticmethod
     def assemble(device_paths: str = None):
-        cmd = f"mdadm --assemble " + (device_paths if device_paths else "--scan")
+        cmd = "mdadm --assemble " + (device_paths if device_paths else "--scan")
         return TestRun.executor.run(cmd)
 
     @staticmethod
@@ -71,7 +72,7 @@ class Mdadm:
 
     @staticmethod
     def examine(brief: bool = True, device_paths: str = None):
-        cmd = f"mdadm --examine "
+        cmd = "mdadm --examine "
         if brief:
             cmd += "--brief "
         cmd += (device_paths if device_paths else "--scan")
@@ -109,7 +110,7 @@ class Mdadm:
 
     @staticmethod
     def stop(device_paths: str = None):
-        cmd = f"mdadm --stop " + (device_paths if device_paths else "--scan")
+        cmd = "mdadm --stop " + (device_paths if device_paths else "--scan")
         return TestRun.executor.run_expect_success(cmd)
 
     @staticmethod

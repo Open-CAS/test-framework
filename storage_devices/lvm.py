@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2022 Intel Corporation
 # Copyright(c) 2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -57,15 +58,15 @@ class LvmConfiguration:
                 TestRun.LOGGER.info(f"Device type '{block_device_type}' already present in config")
                 return
 
-            TestRun.LOGGER.info(f"Add block device type to existing list")
+            TestRun.LOGGER.info("Add block device type to existing list")
             new_type_prefix = f"types = [\"{block_device_type}\", {number_of_partitions}, "
 
             config_update_cmd = f"sed -i 's/{types_prototype_regex}/\t{new_type_prefix}/g'" \
                                 f" {lvm_config_path}"
         else:
-            TestRun.LOGGER.info(f"Create new types variable")
+            TestRun.LOGGER.info("Create new types variable")
             new_types = f"types = [\"{block_device_type}\", {number_of_partitions}]"
-            characteristic_line = f"# Configuration option devices\\/sysfs_scan."
+            characteristic_line = "# Configuration option devices\\/sysfs_scan."
             config_update_cmd = f"sed -i /'{characteristic_line}'/i\\ '{tab}{new_types}' " \
                                 f"{lvm_config_path}"
 
@@ -79,7 +80,7 @@ class LvmConfiguration:
             filter: str
     ):
         if filter is None:
-            TestRun.LOGGER.error(f"Lvm filter for lvm config not provided.")
+            TestRun.LOGGER.error("Lvm filter for lvm config not provided.")
 
         filters_definition = cls.read_filter_definition_from_lvm_config()
 
@@ -91,13 +92,13 @@ class LvmConfiguration:
             new_filter_formatted = filter.replace("/", "\\/")
             new_filter_prefix = f"filter = [ \"{new_filter_formatted}\", "
 
-            TestRun.LOGGER.info(f"Adding filter to existing list")
+            TestRun.LOGGER.info("Adding filter to existing list")
             config_update_cmd = f"sed -i 's/{filter_prototype_regex}/\t{new_filter_prefix}/g'" \
                                 f" {lvm_config_path}"
         else:
-            TestRun.LOGGER.info(f"Create new filter variable")
+            TestRun.LOGGER.info("Create new filter variable")
             new_filter = f"filter = [\"{filter}\"]"
-            characteristic_line = f"# Configuration option devices\\/global_filter."
+            characteristic_line = "# Configuration option devices\\/global_filter."
             config_update_cmd = f"sed -i /'{characteristic_line}'/i\\ '{tab}{new_filter}' " \
                                 f"{lvm_config_path}"
 
@@ -122,7 +123,7 @@ class LvmConfiguration:
             device_type: str
     ):
         if device_type is None:
-            TestRun.LOGGER.error(f"No device provided.")
+            TestRun.LOGGER.error("No device provided.")
 
         cls.__add_block_dev_to_lvm_config(device_type)
 
@@ -132,7 +133,7 @@ class LvmConfiguration:
             filters: []
     ):
         if filters is None:
-            raise ValueError(f"Lvm filters for lvm config not provided.")
+            raise ValueError("Lvm filters for lvm config not provided.")
 
         for f in filters:
             cls.__add_filter_to_lvm_config(f)
@@ -143,7 +144,7 @@ class LvmConfiguration:
             lvm_filters: [],
     ):
         if lvm_filters:
-            TestRun.LOGGER.info(f"Preparing configuration for LVMs - filters.")
+            TestRun.LOGGER.info("Preparing configuration for LVMs - filters.")
             LvmConfiguration.add_filters_to_lvm_config(lvm_filters)
 
             os_disk_filters = [
@@ -151,7 +152,7 @@ class LvmConfiguration:
             ] if Lvm.get_os_vg() else None
 
             if os_disk_filters:
-                TestRun.LOGGER.info(f"Add OS disks to LVM filters.")
+                TestRun.LOGGER.info("Add OS disks to LVM filters.")
                 LvmConfiguration.add_filters_to_lvm_config(os_disk_filters)
 
     @staticmethod
@@ -192,7 +193,7 @@ class VolumeGroup:
 
     @staticmethod
     def get_all_volume_groups():
-        output_lines = TestRun.executor.run(f"pvscan").stdout.splitlines()
+        output_lines = TestRun.executor.run("pvscan").stdout.splitlines()
 
         volume_groups = {}
         for line in output_lines:
@@ -236,7 +237,7 @@ class VolumeGroup:
         for vg in volume_groups:
             for pv in volume_groups[vg]:
                 if pv in device_paths:
-                    TestRun.LOGGER.warning(f"Some devices are used in other LVM volume group")
+                    TestRun.LOGGER.warning("Some devices are used in other LVM volume group")
         return False
 
     @classmethod
@@ -325,7 +326,7 @@ class Lvm(Disk):
                 pv_devs = [pv_devs]
 
             if global_filter_def:
-                TestRun.LOGGER.info(f"Configure 'global filter' variable")
+                TestRun.LOGGER.info("Configure 'global filter' variable")
                 links = []
                 for pv_dev in pv_devs:
                     link = pv_dev.get_device_link("/dev/disk/by-id")
@@ -350,17 +351,17 @@ class Lvm(Disk):
                     global_filter += ", "
                 global_filter = global_filter[:-2]
 
-                TestRun.LOGGER.info(f"Create new 'global filter' variable")
+                TestRun.LOGGER.info("Create new 'global filter' variable")
 
                 new_global = f"global_filter = [{global_filter}]"
-                characteristic_line = f"# Configuration option devices\\/types."
+                characteristic_line = "# Configuration option devices\\/types."
                 config_update_cmd = f"sed -i /'{characteristic_line}'/i\\ " \
                                     f"'{tab}{new_global}' {lvm_config_path}"
 
                 TestRun.LOGGER.info(f"Adding global filter '{global_filter}' to {lvm_config_path}")
                 TestRun.executor.run(config_update_cmd)
 
-            TestRun.LOGGER.info(f"Remove 'filter' in order to 'global_filter' to be used")
+            TestRun.LOGGER.info("Remove 'filter' in order to 'global_filter' to be used")
             if LvmConfiguration.read_filter_definition_from_lvm_config():
                 LvmConfiguration.remove_filters_from_config()
 
@@ -410,7 +411,7 @@ class Lvm(Disk):
         elif isinstance(volume_size_or_percent, int):
             size_cmd = f"--extents {volume_size_or_percent}%VG"
         else:
-            raise ValueError(f"Incorrect type of the first argument (volume_size_or_percent).")
+            raise ValueError("Incorrect type of the first argument (volume_size_or_percent).")
 
         if not name:
             name = cls.__get_unique_lv_name()
@@ -450,7 +451,7 @@ class Lvm(Disk):
                         )
                     )
             else:
-                TestRun.LOGGER.info(f"No LVMs present in the system.")
+                TestRun.LOGGER.info("No LVMs present in the system.")
 
         return volumes
 
@@ -503,7 +504,7 @@ class Lvm(Disk):
             TestRun.executor.run(f"vgchange -an {vg_name}")
             VolumeGroup.remove(vg_name)
 
-        cmd = f"pvdisplay | grep 'PV Name' | awk '{{print $3}}'"
+        cmd = "pvdisplay | grep 'PV Name' | awk '{{print $3}}'"
         os_disks = get_system_disks()
         # invert grep to make sure os_disks won`t be wiped during lvms cleanup
         cmd += "".join([f" | grep -v {os_disk}" for os_disk in os_disks])
@@ -511,11 +512,11 @@ class Lvm(Disk):
         for pv_name in pv_names:
             cls.remove_pv(pv_name)
 
-        TestRun.LOGGER.info(f"Successfully removed all LVMs.")
+        TestRun.LOGGER.info("Successfully removed all LVMs.")
 
     @staticmethod
     def make_sure_lv_is_active(lv_path: str):
-        cmd = f"lvscan"
+        cmd = "lvscan"
         output_lines = TestRun.executor.run_expect_success(cmd).stdout.splitlines()
 
         for line in output_lines:
