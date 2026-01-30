@@ -28,7 +28,6 @@ class Dut:
         self.wps = dut_info.get("wps")
         self.env = dut_info.get("env")
         self.ip = dut_info.get("ip")
-        self.virsh = self.__parse_virsh_config(dut_info)
 
     def __str__(self):
         dut_str = f"ip: {self.ip}\n"
@@ -36,16 +35,6 @@ class Dut:
         dut_str += f'spider: {self.spider["ip"]}\n' if self.spider is not None else ""
         dut_str += (
             f'wps: {self.wps["ip"]} port: {self.wps["port"]}\n' if self.wps is not None else ""
-        )
-        dut_str += (
-            f'virsh.vm_name: {self.virsh["vm_name"]}\n'
-            if (self.virsh is not None)
-            else ""
-        )
-        dut_str += (
-            f'virsh.reboot_timeout: {self.virsh["reboot_timeout"]}\n'
-            if (self.virsh is not None)
-            else ""
         )
         dut_str += "disks:\n"
         for disk in self.disks:
@@ -59,17 +48,3 @@ class Dut:
             if d.disk_type == disk_type:
                 ret_list.append(d)
         return ret_list
-
-    @staticmethod
-    def __parse_virsh_config(dut_info) -> dict | None:
-        from core.test_run import TestRun
-        if "power_control" not in TestRun.plugin_manager.req_plugins.keys():
-            return None
-        try:
-            virsh_controller = TestRun.plugin_manager.get_plugin("power_control")
-            return virsh_controller.parse_virsh_config(
-                vm_name=dut_info["vm_name"], reboot_timeout=dut_info.get("reboot_timeout")
-            )
-        except NameError:
-            return None
-
