@@ -1,7 +1,7 @@
 #
 # Copyright(c) 2022 Intel Corporation
 # Copyright(c) 2026 Unvertical
-# SPDX-License-Identifier: BSD-3-Clause-Clear
+# SPDX-License-Identifier: BSD-3-Clause
 #
 
 from core.test_run import TestRun
