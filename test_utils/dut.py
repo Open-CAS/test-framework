@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
 # Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -46,7 +47,7 @@ class Dut:
             if (self.virsh is not None)
             else ""
         )
-        dut_str += f"disks:\n"
+        dut_str += "disks:\n"
         for disk in self.disks:
             dut_str += f"\t{disk}"
         dut_str += "\n"

@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -44,7 +45,7 @@ class NullBlk(Device):
 
     @staticmethod
     def _list_devices():
-        ls_output = ls(f"/dev/nullb*")
+        ls_output = ls("/dev/nullb*")
         if "No such file or directory" in ls_output:
             return []
         return parse_ls_output(ls_output)

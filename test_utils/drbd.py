@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2022 Intel Corporation
-# SPDX-License-Identifier: BSD-3-Clause-Clear
+# Copyright(c) 2026 Unvertical
+# SPDX-License-Identifier: BSD-3-Clause
 #
 
 from test_utils.filesystem.file import File
@@ -21,12 +22,12 @@ class Resource:
         )
 
         if self.options:
-            output += f"  options {{\n"
+            output += "  options {{\n"
             for (k, v) in self.options.items():
                 output += f"    {k} {v};\n"
-            output += f"  }}\n"
+            output += "  }}\n"
 
-        output += f"}}"
+        output += "}}"
         return output
 
     def __repr__(self):

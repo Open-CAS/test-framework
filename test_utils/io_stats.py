@@ -1,5 +1,6 @@
 #
 # Copyright(c) 2020-2021 Intel Corporation
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 import re
@@ -77,7 +78,7 @@ class IoStats:
         elif re.match(PROCFS_LINE_FORMAT, stats_line):
             fields = stats_line.split()[3:]
         else:
-            raise Exception(f"Wrong input format for diskstat parser")
+            raise Exception("Wrong input format for diskstat parser")
 
         values = [int(f) for f in fields]
 

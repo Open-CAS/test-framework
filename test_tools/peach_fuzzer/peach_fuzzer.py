@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2021 Intel Corporation
 # Copyright(c) 2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -47,7 +48,7 @@ class PeachFuzzer:
         :returns: named tuple with fuzzed param and CLI ready to be executed with Test-Framework
         executors. Param is returned in order to implement correct values checkers in the tests
         """
-        TestRun.LOGGER.info(f"Try to get commands with fuzzed parameters")
+        TestRun.LOGGER.info("Try to get commands with fuzzed parameters")
         FuzzedCommand = namedtuple('FuzzedCommand', ['param', 'command'])
         command_template = command_template.encode("ascii")
         if cls.tested_param_placeholder not in command_template:

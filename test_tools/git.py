@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
 # Copyright(c) 2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -118,4 +119,4 @@ def checkout_version(version):
         f"cd {TestRun.usr.working_dir} && "
         f"git submodule update --force")
     if output.exit_code != 0:
-        raise CmdException(f"Failed to update submodules", output)
+        raise CmdException("Failed to update submodules", output)

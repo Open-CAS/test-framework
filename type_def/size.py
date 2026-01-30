@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
 # Copyright(c) 2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -172,26 +173,12 @@ class Size:
         )
 
     @multimethod
-    def __mul__(self, other: int):
-        return Size(math.ceil(self.get_value() * other))
-
-    @multimethod
-    def __rmul__(self, other: int):
-        return Size(math.ceil(self.get_value() * other))
-
-    @multimethod
     def __mul__(self, other: float):
         return Size(math.ceil(self.get_value() * other))
 
     @multimethod
     def __rmul__(self, other: float):
         return Size(math.ceil(self.get_value() * other))
-
-    @multimethod
-    def __truediv__(self, other):
-        if other.get_value() == 0:
-            raise ValueError("Divisor must not be equal to 0.")
-        return self.get_value() / other.get_value()
 
     @multimethod
     def __truediv__(self, other: int):

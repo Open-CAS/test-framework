@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
 # Copyright(c) 2024-2025 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -66,7 +67,7 @@ def drop_caches(level: DropCachesMode = DropCachesMode.ALL):
 
 def get_number_of_processors_from_cpuinfo():
     """Returns number of processors (count) which are listed out in /proc/cpuinfo"""
-    cmd = f"cat /proc/cpuinfo | grep processor | wc -l"
+    cmd = "cat /proc/cpuinfo | grep processor | wc -l"
     output = TestRun.executor.run(cmd).stdout
 
     return int(output)
@@ -157,13 +158,13 @@ def kill_all_io(graceful=True):
     TestRun.executor.run("kill -9 `ps aux | grep -i vdbench.* | awk '{ print $2 }'`")
 
     if TestRun.executor.run("pgrep -x dd").exit_code == 0:
-        raise Exception(f"Failed to stop dd!")
+        raise Exception("Failed to stop dd!")
     if TestRun.executor.run("pgrep -x fio").exit_code == 0:
-        raise Exception(f"Failed to stop fio!")
+        raise Exception("Failed to stop fio!")
     if TestRun.executor.run("pgrep -x blktrace").exit_code == 0:
-        raise Exception(f"Failed to stop blktrace!")
+        raise Exception("Failed to stop blktrace!")
     if TestRun.executor.run("pgrep vdbench").exit_code == 0:
-        raise Exception(f"Failed to stop vdbench!")
+        raise Exception("Failed to stop vdbench!")
 
 
 def sync():
@@ -212,7 +213,7 @@ def get_wbt_lat(device: Device):
 
 
 def get_cores_ids_range(numa_node: int):
-    output = TestRun.executor.run_expect_success(f"lscpu --all --parse").stdout
+    output = TestRun.executor.run_expect_success("lscpu --all --parse").stdout
     parse_output = re.findall(r'(\d+),(\d+),(?:\d+),(\d+),,', output, re.I)
 
     return [element[0] for element in parse_output if int(element[2]) == numa_node]
