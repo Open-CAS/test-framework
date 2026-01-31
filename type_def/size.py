@@ -173,15 +173,15 @@ class Size:
         )
 
     @multimethod
-    def __mul__(self, other: float):
+    def __mul__(self, other: float | int):
         return Size(math.ceil(self.get_value() * other))
 
     @multimethod
-    def __rmul__(self, other: float):
+    def __rmul__(self, other: float | int):
         return Size(math.ceil(self.get_value() * other))
 
     @multimethod
-    def __truediv__(self, other: int):
+    def __truediv__(self, other: float | int):
         if other == 0:
             raise ValueError("Divisor must not be equal to 0.")
         return Size(math.ceil(self.get_value() / other))
