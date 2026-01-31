@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
 # Copyright(c) 2023-2025 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -23,7 +24,7 @@ from test_tools import disk_finder
 from test_utils.dut import Dut
 
 TestRun = core.test_run.TestRun
-TestRun.TEST_RUN_DATA_PATH = "/tmp/test_data"
+TestRun.TEST_RUN_DATA_PATH = "/tmp/"
 
 
 @classmethod
