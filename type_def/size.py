@@ -5,6 +5,8 @@
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
+from __future__ import annotations
+
 import enum
 import math
 import random
@@ -181,7 +183,10 @@ class Size:
         return Size(math.ceil(self.get_value() * other))
 
     @multimethod
-    def __truediv__(self, other: float | int):
+    def __truediv__(self, other: float | int | Size):
+        if isinstance(other, Size):
+            other = other.get_value()
+            return math.ceil(self.get_value() / other)
         if other == 0:
             raise ValueError("Divisor must not be equal to 0.")
         return Size(math.ceil(self.get_value() / other))
