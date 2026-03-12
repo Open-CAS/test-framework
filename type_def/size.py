@@ -191,6 +191,15 @@ class Size:
             raise ValueError("Divisor must not be equal to 0.")
         return Size(math.ceil(self.get_value() / other))
 
+    @multimethod
+    def __floordiv__(self, other: float | int | Size):
+        if isinstance(other, Size):
+            other = other.get_value()
+            return math.floor(self.get_value() / other)
+        if other == 0:
+            raise ValueError("Divisor must not be equal to 0.")
+        return Size(math.floor(self.get_value() / other))
+
     def set_unit(self, new_unit: Unit):
         new_size = Size(self.get_value(target_unit=new_unit), unit=new_unit)
 
