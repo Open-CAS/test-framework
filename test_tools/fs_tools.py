@@ -29,6 +29,10 @@ class Filesystem(Enum):
     linux_raid_member = auto()
     LVM2_member = auto()
 
+    @classmethod
+    def regular(cls):
+        return [cls.xfs, cls.ext3, cls.ext4]
+
 
 class Permissions(IntFlag):
     r = 4
