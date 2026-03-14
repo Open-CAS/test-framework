@@ -12,7 +12,7 @@ import re
 import textwrap
 from collections import namedtuple
 from datetime import datetime, timedelta
-from enum import Enum
+from enum import Enum, auto
 from aenum import IntFlag  # IntFlag from enum is not able to correctly parse string like "x|y|z"
 
 from connection.utils.output import CmdException
@@ -22,9 +22,12 @@ from type_def.size import Size, Unit
 
 
 class Filesystem(Enum):
-    xfs = 0
-    ext3 = 1
-    ext4 = 2
+    xfs = auto()
+    xfs_external_log = auto()
+    ext3 = auto()
+    ext4 = auto()
+    linux_raid_member = auto()
+    LVM2_member = auto()
 
 
 class Permissions(IntFlag):
