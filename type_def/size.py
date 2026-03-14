@@ -185,8 +185,7 @@ class Size:
     @multimethod
     def __truediv__(self, other: float | int | Size):
         if isinstance(other, Size):
-            other = other.get_value()
-            return math.ceil(self.get_value() / other)
+            return self.get_value() / other.get_value()
         if other == 0:
             raise ValueError("Divisor must not be equal to 0.")
         return Size(math.ceil(self.get_value() / other))
