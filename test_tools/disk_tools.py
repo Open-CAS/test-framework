@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
 # Copyright(c) 2023-2025 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -14,7 +15,7 @@ from typing import List
 from core.test_run import TestRun
 from test_tools.dd import Dd
 from test_tools.fs_tools import readlink, parse_ls_output, ls, check_if_directory_exists, \
-    create_directory, wipefs, is_mounted
+    create_directory, is_mounted
 from test_tools.udev import Udev
 from type_def.size import Size, Unit
 
@@ -254,8 +255,11 @@ def remove_partitions(device):
 
     TestRun.LOGGER.info(f"Removing partitions from device: {device.path} "
                         f"({device.get_device_id()}).")
-    wipefs(device)
-    Udev.trigger()
+    # We can't use wipefs here. wipefs only erases magic bytes, not the partition
+    # table itself, so the kernel may still see stale partitions after partprobe.
+    # parted mklabel replaces the entire partition table and triggers kernel re-read.
+    # The label type choice does not really matter, so we just pick gpt.
+    TestRun.executor.run_expect_success(f"parted --script {device.path} mklabel gpt")
     Udev.settle()
     output = TestRun.executor.run(f"ls {device.path}* -1")
     if len(output.stdout.split('\n')) > 1:
