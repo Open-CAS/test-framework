@@ -31,7 +31,8 @@ TestRun.TEST_RUN_DATA_PATH = "/tmp/"
 def __configure(cls, config):
     config.addinivalue_line(
         "markers",
-        "require_disk(name, type): require disk of specific type, otherwise skip"
+        "require_disk(name, type, min_size=None): require disk of specific type"
+        " (and optionally minimum size), otherwise skip"
     )
     config.addinivalue_line(
         "markers",
@@ -78,6 +79,12 @@ def __prepare(cls, item, config):
     if len(req_disks) != len(cls.req_disks):
         raise Exception("Disk name specified more than once!")
 
+    cls.req_disk_min_sizes = {}
+    for mark in cls.item.iter_markers(name="require_disk"):
+        min_size = mark.kwargs.get("min_size")
+        if min_size is not None:
+            cls.req_disk_min_sizes[mark.args[0]] = min_size
+
 
 TestRun.prepare = __prepare
 
@@ -97,8 +104,11 @@ TestRun.attach_log = __attach_log
 
 @classmethod
 def __setup_disk(cls, disk_name, disk_type):
+    min_size = cls.req_disk_min_sizes.get(disk_name)
     cls.disks[disk_name] = next(filter(
-        lambda disk: disk.disk_type in disk_type.types() and disk not in cls.disks.values(),
+        lambda disk: disk.disk_type in disk_type.types()
+        and disk not in cls.disks.values()
+        and (min_size is None or disk.size >= min_size),
         cls.dut.disks
     ), None)
     if not cls.disks[disk_name]:
