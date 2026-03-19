@@ -49,6 +49,14 @@ class SystemManagerType(Enum):
     systemd = 1
 
 
+def get_syslog_path():
+    for path in ["/var/log/messages", "/var/log/syslog"]:
+        result = TestRun.executor.run(f"test -f {path}")
+        if result.exit_code == 0:
+            return path
+    raise FileNotFoundError("Could not find syslog file")
+
+
 def get_distro():
     output = TestRun.executor.run(
         "cat /etc/os-release | grep -e \"^ID=\" | awk -F= '{print$2}' | tr -d '\"'"

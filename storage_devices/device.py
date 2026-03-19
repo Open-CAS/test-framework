@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
 # Copyright(c) 2023-2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -116,10 +117,3 @@ class Device:
 
     def __repr__(self):
         return str(self)
-
-    @staticmethod
-    def get_scsi_debug_devices():
-        scsi_debug_devices = TestRun.executor.run_expect_success(
-            "lsscsi --scsi_id | grep scsi_debug").stdout
-        return [Device(f'/dev/disk/by-id/scsi-{device.split()[-1]}')
-                for device in scsi_debug_devices.splitlines()]
