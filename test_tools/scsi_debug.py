@@ -50,7 +50,7 @@ class ScsiDebug:
         return [Device(f'/dev/disk/by-id/scsi-{device.split()[-1]}')
                 for device in scsi_debug_devices.splitlines()]
 
-    def mark(self):
+    def reset_stats(self):
         """Set syslog position to current end so subsequent reads only see new entries."""
         if self.syslog_path is None:
             self.syslog_path = get_syslog_path()
@@ -60,21 +60,15 @@ class ScsiDebug:
         ).stdout.strip()
         self.last_read_line = int(line_count)
 
-    def check_for_signals(self):
-        log_lines = self._read_syslog()
-        flush_count, fua_count = self._count_logs(log_lines)
-        self._validate_logs_amount(fua_count, "FUA")
-        self._validate_logs_amount(flush_count, "FLUSH")
-
-    def check_for_flush(self):
+    def get_flush_count(self):
         log_lines = self._read_syslog()
         flush_count, _ = self._count_logs(log_lines)
-        self._validate_logs_amount(flush_count, "FLUSH")
+        return flush_count
 
-    def check_for_fua(self):
+    def get_fua_count(self):
         log_lines = self._read_syslog()
         _, fua_count = self._count_logs(log_lines)
-        self._validate_logs_amount(fua_count, "FUA")
+        return fua_count
 
     def _read_syslog(self):
         """Read syslog lines since last mark and advance the position."""
@@ -98,15 +92,3 @@ class ScsiDebug:
             if FUA.search(line):
                 fua_count += 1
         return flush_count, fua_count
-
-    @staticmethod
-    def _validate_logs_amount(count, log_type):
-        if count == 0:
-            if log_type == "FLUSH":
-                TestRun.LOGGER.error(f"{log_type} log not occured")
-            else:
-                TestRun.LOGGER.warning(f"{log_type} log not occured")
-        elif count == 1:
-            TestRun.LOGGER.warning(f"{log_type} log occured only once.")
-        else:
-            TestRun.LOGGER.info(f"{log_type} log occured {count} times.")
