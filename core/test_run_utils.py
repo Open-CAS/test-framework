@@ -269,6 +269,39 @@ TestRun.generate_tests = __generate_tests
 
 
 @classmethod
+def __post_collect(cls, items):
+    for item in items:
+        deferred_skips = []
+        remaining_markers = []
+        for marker in item.own_markers:
+            if marker.name == "skip":
+                deferred_skips.append(marker)
+            elif marker.name == "skipif":
+                condition = marker.args[0] if marker.args else False
+                if condition:
+                    reason = marker.kwargs.get("reason", "")
+                    deferred_skips.append(pytest.mark.skip(reason=reason))
+            else:
+                remaining_markers.append(marker)
+        if deferred_skips:
+            item.own_markers = remaining_markers
+            item._deferred_skips = deferred_skips
+
+
+TestRun.post_collect = __post_collect
+
+
+@classmethod
+def __post_setup(cls, item):
+    for marker in getattr(item, "_deferred_skips", []):
+        reason = marker.kwargs.get("reason", marker.args[0] if marker.args else "")
+        pytest.skip(reason)
+
+
+TestRun.post_setup = __post_setup
+
+
+@classmethod
 def __addoption(cls, parser):
     parser.addoption("--parametrization-type", choices=["pair", "full"], default="pair")
     parser.addoption("--random-seed", type=int, default=None)
