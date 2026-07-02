@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2019-2022 Intel Corporation
 # Copyright(c) 2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 
@@ -67,6 +68,20 @@ class Runlevel(IntEnum):
     emergency = runlevel7
 
 
+# Native systemd target names for each runlevel. The legacy runlevelN.target
+# compatibility aliases have been removed in newer systemd (e.g. Ubuntu 26.04),
+# so the native targets must be used with 'systemctl set-default'.
+systemd_target_names = {
+    Runlevel.runlevel0: "poweroff",
+    Runlevel.runlevel1: "rescue",
+    Runlevel.runlevel2: "multi-user",
+    Runlevel.runlevel3: "multi-user",
+    Runlevel.runlevel5: "graphical",
+    Runlevel.runlevel6: "reboot",
+    Runlevel.runlevel7: "emergency",
+}
+
+
 def get_system_manager():
     output = TestRun.executor.run_expect_success("ps -p 1").stdout
     type = output.split('\n')[1].split()[3]
@@ -83,7 +98,8 @@ def change_runlevel(runlevel: Runlevel):
     if Runlevel.runlevel0 < runlevel < Runlevel.runlevel6:
         system_manager = get_system_manager()
         if system_manager == SystemManagerType.systemd:
-            TestRun.executor.run_expect_success(f"systemctl set-default {runlevel.name}.target")
+            target = systemd_target_names[runlevel]
+            TestRun.executor.run_expect_success(f"systemctl set-default {target}.target")
         else:
             TestRun.executor.run_expect_success(
                 f"sed -i 's/^.*id:.*$/id:{runlevel.value}:initdefault: /' /etc/inittab")
