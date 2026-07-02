@@ -314,6 +314,13 @@ def _is_by_id_path(path: str):
     return path in [posixpath.join(dev_by_id_dir, id_path.full_path) for id_path in by_id_paths]
 
 
+def _is_by_path_path(path: str):
+    """check if given path already is proper by-path path"""
+    dev_by_path_dir = "/dev/disk/by-path"
+    by_path_paths = parse_ls_output(ls(dev_by_path_dir), dev_by_path_dir)
+    return path in [posixpath.join(dev_by_path_dir, p.full_path) for p in by_path_paths]
+
+
 def _is_dev_path_whitelisted(path: str):
     """check if given path is whitelisted"""
     whitelisted_paths = [
@@ -338,10 +345,10 @@ def validate_dev_path(path: str):
     if _is_dev_path_whitelisted(path):
         return path
 
-    if _is_by_id_path(path):
+    if _is_by_id_path(path) or _is_by_path_path(path):
         return path
 
-    raise ValueError(f'By-id device link {path} is broken.')
+    raise ValueError(f'Device link {path} is not a valid by-id or by-path link.')
 
 
 def get_block_device_names_list(exclude_list: List[int] = None) -> List[str]:

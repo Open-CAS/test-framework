@@ -1,6 +1,7 @@
 #
 # Copyright(c) 2019-2021 Intel Corporation
 # Copyright(c) 2024 Huawei Technologies Co., Ltd.
+# Copyright(c) 2026 Unvertical
 # SPDX-License-Identifier: BSD-3-Clause
 #
 import os
@@ -141,17 +142,21 @@ def __get_slaves(device_name: str):
 
 
 def resolve_to_by_id_link(path):
-    by_id_paths = TestRun.executor.run_expect_success("ls /dev/disk/by-id -1").stdout.splitlines()
-    dev_full_paths = [
-        posixpath.join("/dev/disk/by-id", by_id_path) for by_id_path in by_id_paths
-    ]
+    link_dirs = ["/dev/disk/by-id", "/dev/disk/by-path"]
+    dev_target = readlink(posixpath.join("/dev", path))
 
-    for full_path in dev_full_paths:
-        # handle exception for broken links
+    for link_dir in link_dirs:
         try:
-            if readlink(full_path) == readlink(posixpath.join("/dev", path)):
-                return full_path
+            links = TestRun.executor.run_expect_success(f"ls {link_dir} -1").stdout.splitlines()
         except CmdException:
-            continue
+            continue  # directory may not exist if there are no links of this type
+        for link in links:
+            full_path = posixpath.join(link_dir, link)
+            # handle exception for broken links
+            try:
+                if readlink(full_path) == dev_target:
+                    return full_path
+            except CmdException:
+                continue
 
-    raise ValueError(f'By-id device link not found for device {path}')
+    raise ValueError(f'By-id or by-path device link not found for device {path}')
