@@ -38,7 +38,7 @@ class PeachFuzzer:
     fuzzy_output_file = posixpath.join(base_dir, "fuzzedParams.txt")
     tested_param_placeholder = b"{param}"
     # escape backslash first, so it doesn't interfere with escaping other characters
-    escape_chars = '\\\n"\'&|;()`<>$! '
+    escape_chars = '\\\n\t"\'&|;()`<>$!*#~ '
 
     @classmethod
     def get_fuzzed_command(cls, command_template: str, count: int):
@@ -191,11 +191,17 @@ class PeachFuzzer:
         Escaping is done for example in order to make fuzzed string executable in Linux CLI
         If fuzzed string will be used in other places, escape_chars list may be overwritten.
         """
-        for i in cls.escape_chars:
-            i = bytes(i, "utf-8")
-            if i in fuzzed_str[:]:
-                fuzzed_str = fuzzed_str.replace(i, b'\\' + i)
-        return fuzzed_str
+        escape_bytes = set(cls.escape_chars.encode("utf-8"))
+        escaped = bytearray()
+        for char in fuzzed_str:
+            if char not in escape_bytes:
+                escaped.append(char)
+            elif char == ord("\n"):
+                escaped += b"'\n'"
+            else:
+                escaped.append(ord("\\"))
+                escaped.append(char)
+        return bytes(escaped)
 
     @classmethod
     def _is_xml_config_prepared(cls):
