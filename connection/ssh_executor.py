@@ -105,17 +105,26 @@ class SshExecutor(BaseExecutor):
         except Exception:
             raise Exception(f"An exception occurred while trying to disconnect from {self.host}")
 
+    def _exec_command(self, command, timeout):
+        channel = self.ssh.get_transport().open_session(timeout=timeout)
+        channel.settimeout(timeout)
+        channel.exec_command(command)
+        return channel
+
     def _execute(self, command, timeout):
         try:
-            (stdin, stdout, stderr) = self.ssh.exec_command(
-                command, timeout=timeout.total_seconds()
-            )
+            channel = self._exec_command(command, timeout.total_seconds())
         except paramiko.SSHException as e:
             raise ConnectionError(
                 f"An exception occurred while executing command '{command}' on" f" {self.host}\n{e}"
             )
 
-        return Output(stdout.read(), stderr.read(), stdout.channel.recv_exit_status())
+        try:
+            stdout = channel.makefile("r").read()
+            stderr = channel.makefile_stderr("r").read()
+            return Output(stdout, stderr, channel.recv_exit_status())
+        finally:
+            channel.close()
 
     def _rsync(
         self,
@@ -200,7 +209,7 @@ class SshExecutor(BaseExecutor):
 
     def is_active(self):
         try:
-            self.ssh.exec_command("", timeout=5)
+            self._exec_command("", timeout=5).close()
             return True
         except Exception:
             return False
